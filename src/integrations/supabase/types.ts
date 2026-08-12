@@ -1059,6 +1059,7 @@ export type Database = {
           pregnancy_status: Json | null
           preliminary_assessment: string | null
           protocol_text: string | null
+          reasoning_provider: string | null
           referral_required: boolean
           risk_tier: string | null
           status: string
@@ -1095,6 +1096,7 @@ export type Database = {
           pregnancy_status?: Json | null
           preliminary_assessment?: string | null
           protocol_text?: string | null
+          reasoning_provider?: string | null
           referral_required?: boolean
           risk_tier?: string | null
           status?: string
@@ -1131,6 +1133,7 @@ export type Database = {
           pregnancy_status?: Json | null
           preliminary_assessment?: string | null
           protocol_text?: string | null
+          reasoning_provider?: string | null
           referral_required?: boolean
           risk_tier?: string | null
           status?: string

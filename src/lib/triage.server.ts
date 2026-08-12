@@ -1,4 +1,5 @@
 import { geminiFetch } from "./gemini.server";
+import { claudeChat, CLAUDE_MODEL } from "./claude.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { hasCondition, type ChronicCondition, type PregnancyStatus } from "./conditions";
 
@@ -135,16 +136,89 @@ const FEW_SHOTS = `Examples of symptom pattern -> likely condition CATEGORY (nev
 - itchy rash after new soap -> category: contact skin irritation
 - shallow cut with mild bleeding -> category: minor soft-tissue injury`;
 
+const REASONING_SYSTEM = `You are supporting a rural health worker. Write a SHORT preliminary assessment (max 120 words) for a doctor to review.
+${FEW_SHOTS}
+Rules: never state a definitive diagnosis. Use hedged wording only: "consistent with", "may indicate", "warrants review for". Do NOT assign any risk level, tier, urgency rating or triage colour. Do NOT recommend medicines. Plain prose, no markdown headings.`;
+
+export type ReasoningResult = { text: string; provider: string; fallback: boolean };
+
+/**
+ * Symptom-reasoning node — routed through Claude. If Claude fails we fall back to
+ * Gemini, but the fallback is logged AND surfaced in the provider tag so it is
+ * never silent.
+ */
 export async function reasonAssessment(
   structured: StructuredSummary,
   imageAnalysis?: string | null,
-): Promise<string> {
-  return callGemini(
-    JSON.stringify({ structured, image_observation: imageAnalysis ?? null }),
-    `You are supporting a rural health worker. Write a SHORT preliminary assessment (max 120 words) for a doctor to review.
-${FEW_SHOTS}
-Rules: never state a definitive diagnosis. Use hedged wording only: "consistent with", "may indicate", "warrants review for". Do NOT assign any risk level, tier, urgency rating or triage colour. Do NOT recommend medicines. Plain prose, no markdown headings.`,
-  );
+): Promise<ReasoningResult> {
+  const payload = JSON.stringify({ structured, image_observation: imageAnalysis ?? null });
+  try {
+    const text = await claudeChat({ system: REASONING_SYSTEM, content: payload });
+    if (!text) throw new Error("Claude returned an empty assessment");
+    return { text, provider: `Claude (${CLAUDE_MODEL})`, fallback: false };
+  } catch (error) {
+    console.error(
+      `[provider-fallback] Symptom reasoning did NOT use Claude — falling back to Gemini. Reason: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+    const text = await callGemini(payload, REASONING_SYSTEM);
+    return { text, provider: `Gemini (${MODEL}) — Claude fallback`, fallback: true };
+  }
+}
+
+/* ---------------- Critical-condition escalation check (Claude) ---------------- */
+
+export type CriticalCheck = {
+  critical: boolean;
+  reason: string | null;
+  provider: string;
+  fallback: boolean;
+};
+
+const CRITICAL_SYSTEM = `You are a conservative clinical safety checker for a rural triage system.
+Decide ONLY whether the described presentation shows signs of a potentially life-threatening or rapidly deteriorating condition that must be seen urgently.
+Return ONLY JSON: {"critical":boolean,"reason":string}
+"reason" is max 20 words, plain language, citing the specific finding. If nothing critical is present, set critical=false and reason="".
+Never diagnose, never name a triage colour, never recommend medicines.`;
+
+/**
+ * Advisory only: this can raise the deterministic tier, never lower it.
+ */
+export async function criticalConditionCheck(
+  structured: StructuredSummary,
+  symptomsText: string,
+  imageAnalysis?: string | null,
+): Promise<CriticalCheck> {
+  const payload = JSON.stringify({
+    structured,
+    raw_symptoms: symptomsText,
+    image_observation: imageAnalysis ?? null,
+  });
+  try {
+    const raw = await claudeChat({ system: CRITICAL_SYSTEM, content: payload, maxTokens: 300 });
+    const parsed = parseJson<{ critical?: boolean; reason?: string }>(raw, {});
+    return {
+      critical: parsed.critical === true,
+      reason: parsed.reason?.trim() || null,
+      provider: `Claude (${CLAUDE_MODEL})`,
+      fallback: false,
+    };
+  } catch (error) {
+    console.error(
+      `[provider-fallback] Critical-condition check did NOT use Claude — falling back to Gemini. Reason: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+    const raw = await callGemini(payload, CRITICAL_SYSTEM, true);
+    const parsed = parseJson<{ critical?: boolean; reason?: string }>(raw, {});
+    return {
+      critical: parsed.critical === true,
+      reason: parsed.reason?.trim() || null,
+      provider: `Gemini (${MODEL}) — Claude fallback`,
+      fallback: true,
+    };
+  }
 }
 
 /* ---------------- Step 3: deterministic risk scoring ---------------- */
