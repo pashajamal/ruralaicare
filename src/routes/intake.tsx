@@ -203,7 +203,8 @@ export function IntakePage() {
     try {
       let imagePath: string | null = null;
       if (file) {
-        const path = `${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
+        const centre = profile?.health_centre ?? "unknown";
+        const path = `${centre}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
         const { error } = await supabase.storage.from("clinic-uploads").upload(path, file);
         if (error) throw new Error("Image upload failed");
         imagePath = path;
