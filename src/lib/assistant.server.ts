@@ -1,4 +1,5 @@
 import { geminiFetch } from "./gemini.server";
+import { claudeChat, hasAnthropicKey } from "./claude.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const MODEL = "google/gemini-2.5-flash";
@@ -23,7 +24,7 @@ export async function answerScopedQuestion(args: {
       `Answer general medical, first-aid, medicine, hygiene, maternal and child health, and public-health questions in clear, practical language. ` +
       `You are NOT diagnosing or treating any specific patient: never give a definitive diagnosis, never prescribe doses for an individual, and never assign a risk tier. ` +
       `If a question needs a real examination, say the patient must be assessed and escalated to a doctor. Max 160 words, plain prose. ${languageRule}`;
-    return `${await callGateway(system, args.question)}\n\n${ASSISTANT_DISCLAIMER}`;
+    return `${await callAI(system, args.question)}\n\n${ASSISTANT_DISCLAIMER}`;
   }
 
   const [{ data: patient }, { data: visits }, { data: entries }, { data: plans }] = await Promise.all([
@@ -59,20 +60,30 @@ export async function answerScopedQuestion(args: {
       ? `You are a clinical case assistant for a reviewing doctor. Answer ONLY from the supplied case data (visits, vitals, deterministic risk tiers, tracker history, care plans). Summarize trends and changes over time. Never state a definitive diagnosis, never assign or change a risk tier, never prescribe. If the data does not contain the answer, say so plainly. Max 160 words, plain prose. ${languageRule}`
       : `You are a case-support assistant for a rural health worker. Answer ONLY from the supplied case data. Explain what vitals and findings mean in simple language, and what to prepare before the doctor call. Never diagnose, never recommend or change medication, never assign a risk tier. If the data does not contain the answer, say so plainly. Max 140 words, plain prose. ${languageRule}`;
 
-  const answer = await callGateway(system, `CASE DATA:\n${caseData}\n\nQUESTION: ${args.question}`);
+  const answer = await callAI(system, `CASE DATA:\n${caseData}\n\nQUESTION: ${args.question}`);
 
   // Disclaimer is enforced server-side in the response formatting, not just in the prompt.
   return `${answer}\n\n${ASSISTANT_DISCLAIMER}`;
 }
 
-async function callGateway(system: string, user: string): Promise<string> {
-  const res = await geminiFetch("/chat/completions", ({
-      model: MODEL,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-  }));
+/** Tries Claude first if ANTHROPIC_API_KEY is configured, with Gemini fallback. */
+async function callAI(system: string, user: string): Promise<string> {
+  if (hasAnthropicKey()) {
+    try {
+      const text = await claudeChat({ system, content: user, maxTokens: 800 });
+      if (text) return text;
+    } catch (error) {
+      console.error("[assistant] Claude call failed, falling back to Gemini:", error);
+    }
+  }
+
+  const res = await geminiFetch("/chat/completions", {
+    model: MODEL,
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: user },
+    ],
+  });
 
   if (res.status === 429) throw new Error("AI rate limit reached. Please retry in a moment.");
   if (res.status === 402) throw new Error("AI credits exhausted.");
