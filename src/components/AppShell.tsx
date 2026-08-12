@@ -37,35 +37,109 @@ import { t } from "@/lib/i18n";
 import { readPending } from "@/lib/offline";
 
 type NavItem = { to: string; key: Parameters<typeof t>[1]; icon: typeof LayoutDashboard };
+type NavGroup = { label?: Parameters<typeof t>[1]; items: NavItem[] };
 
-const WORKER_NAV: NavItem[] = [
-  { to: "/", key: "dashboard", icon: LayoutDashboard },
-  { to: "/intake", key: "intake", icon: ClipboardPlus },
-  { to: "/my-cases", key: "myCases", icon: FileText },
-  { to: "/tracker", key: "tracker", icon: HeartPulse },
-  { to: "/assistant", key: "assistant", icon: Bot },
-  { to: "/hospitals", key: "hospitals", icon: MapPin },
-  { to: "/medicines", key: "medicines", icon: Pill },
-  { to: "/queue", key: "queue", icon: ListChecks },
-  { to: "/history", key: "history", icon: History },
-  { to: "/referrals", key: "referrals", icon: Send },
-  { to: "/followups", key: "followups", icon: CalendarClock },
-  { to: "/settings", key: "settings", icon: Settings },
+const WORKER_NAV: NavGroup[] = [
+  {
+    items: [
+      { to: "/", key: "dashboard", icon: LayoutDashboard },
+      { to: "/intake", key: "intake", icon: ClipboardPlus },
+    ],
+  },
+  {
+    label: "grpCases",
+    items: [
+      { to: "/my-cases", key: "myCases", icon: FileText },
+      { to: "/queue", key: "queue", icon: ListChecks },
+      { to: "/history", key: "history", icon: History },
+    ],
+  },
+  {
+    label: "grpCare",
+    items: [
+      { to: "/tracker", key: "tracker", icon: HeartPulse },
+      { to: "/followups", key: "followups", icon: CalendarClock },
+      { to: "/referrals", key: "referrals", icon: Send },
+    ],
+  },
+  {
+    label: "grpTools",
+    items: [
+      { to: "/assistant", key: "assistant", icon: Bot },
+      { to: "/hospitals", key: "hospitals", icon: MapPin },
+      { to: "/medicines", key: "medicines", icon: Pill },
+      { to: "/settings", key: "settings", icon: Settings },
+    ],
+  },
 ];
 
-const DOCTOR_NAV: NavItem[] = [
-  { to: "/", key: "dashboard", icon: LayoutDashboard },
-  { to: "/doctor", key: "reviewQueue", icon: Stethoscope },
-  { to: "/history", key: "history", icon: History },
-  { to: "/care-plans", key: "carePlans", icon: FileText },
-  { to: "/trends", key: "trends", icon: LineChart },
-  { to: "/medicines", key: "medicines", icon: Pill },
-  { to: "/assistant", key: "assistant", icon: Bot },
-  { to: "/analytics", key: "analytics", icon: BarChart3 },
-  { to: "/referrals", key: "referrals", icon: Send },
-  { to: "/followups", key: "followups", icon: CalendarClock },
-  { to: "/settings", key: "settings", icon: Settings },
+const DOCTOR_NAV: NavGroup[] = [
+  {
+    items: [
+      { to: "/", key: "dashboard", icon: LayoutDashboard },
+      { to: "/doctor", key: "reviewQueue", icon: Stethoscope },
+    ],
+  },
+  {
+    label: "grpCases",
+    items: [{ to: "/history", key: "history", icon: History }],
+  },
+  {
+    label: "grpCare",
+    items: [
+      { to: "/care-plans", key: "carePlans", icon: FileText },
+      { to: "/followups", key: "followups", icon: CalendarClock },
+      { to: "/referrals", key: "referrals", icon: Send },
+    ],
+  },
+  {
+    label: "grpTools",
+    items: [
+      { to: "/assistant", key: "assistant", icon: Bot },
+      { to: "/medicines", key: "medicines", icon: Pill },
+      { to: "/trends", key: "trends", icon: LineChart },
+      { to: "/analytics", key: "analytics", icon: BarChart3 },
+      { to: "/settings", key: "settings", icon: Settings },
+    ],
+  },
 ];
+
+function NavLinks({
+  groups,
+  lang,
+  onNavigate,
+}: {
+  groups: NavGroup[];
+  lang: Parameters<typeof t>[0];
+  onNavigate?: () => void;
+}) {
+  return (
+    <>
+      {groups.map((group, index) => (
+        <div key={group.label ?? `group-${index}`} className="flex flex-col gap-1">
+          {group.label ? (
+            <p className="px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+              {t(lang, group.label)}
+            </p>
+          ) : null}
+          {group.items.map(({ to, key, icon: Icon }) => (
+            <Link
+              key={to}
+              to={to}
+              activeOptions={{ exact: to === "/" }}
+              onClick={onNavigate}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              activeProps={{ className: "bg-accent text-accent-foreground" }}
+            >
+              <Icon className="size-4 shrink-0" aria-hidden />
+              <span className="truncate">{t(lang, key)}</span>
+            </Link>
+          ))}
+        </div>
+      ))}
+    </>
+  );
+}
 
 export function useOnline() {
   const [online, setOnline] = useState(true);
@@ -112,19 +186,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        <nav aria-label="Main" className="flex flex-1 flex-col gap-1 px-3">
-          {nav.map(({ to, key, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              activeOptions={{ exact: to === "/" }}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-              activeProps={{ className: "bg-accent text-accent-foreground" }}
-            >
-              <Icon className="size-4" aria-hidden />
-              {t(lang, key)}
-            </Link>
-          ))}
+        <nav aria-label="Main" className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 pb-3">
+          <NavLinks groups={nav} lang={lang} />
         </nav>
 
         {session ? (
@@ -167,19 +230,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   </SheetTitle>
                 </SheetHeader>
                 <nav aria-label="Mobile" className="flex flex-col gap-1 overflow-y-auto px-3 pb-4">
-                  {nav.map(({ to, key, icon: Icon }) => (
-                    <Link
-                      key={to}
-                      to={to}
-                      activeOptions={{ exact: to === "/" }}
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                      activeProps={{ className: "bg-accent text-accent-foreground" }}
-                    >
-                      <Icon className="size-4 shrink-0" aria-hidden />
-                      {t(lang, key)}
-                    </Link>
-                  ))}
+                  <NavLinks groups={nav} lang={lang} onNavigate={() => setMobileOpen(false)} />
                 </nav>
                 {session ? (
                   <div className="border-t border-border px-4 py-4">
