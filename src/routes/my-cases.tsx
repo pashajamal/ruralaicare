@@ -55,12 +55,8 @@ function MyCasesPage() {
 
   const rows = useMemo(() => {
     const term = search.trim().toLowerCase();
-    const digits = term.replace(/\D/g, "");
     return (data ?? []).filter((v) => {
       const p = v.patients as { name?: string; mobile_number?: string | null } | null;
-      const phone = (p?.mobile_number ?? "").replace(/\D/g, "");
-      void digits;
-      void phone;
       if (!matchesPatient(term, p?.name, p?.mobile_number)) return false;
       if (filter === "Pending") return v.status !== "finalized";
       if (filter === "Finalized") return v.status === "finalized";
