@@ -14,6 +14,123 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string | null
+          actor_role: string | null
+          created_at: string
+          detail: string | null
+          health_centre: string | null
+          id: string
+          patient_id: string | null
+          visit_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string | null
+          actor_role?: string | null
+          created_at?: string
+          detail?: string | null
+          health_centre?: string | null
+          id?: string
+          patient_id?: string | null
+          visit_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string | null
+          actor_role?: string | null
+          created_at?: string
+          detail?: string | null
+          health_centre?: string | null
+          id?: string
+          patient_id?: string | null
+          visit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_logs_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultations: {
+        Row: {
+          assigned_doctor: string | null
+          completed_at: string | null
+          created_at: string
+          health_centre: string
+          health_worker_id: string | null
+          id: string
+          notes: string | null
+          patient_id: string
+          priority: string
+          started_at: string | null
+          status: string
+          updated_at: string
+          visit_id: string
+        }
+        Insert: {
+          assigned_doctor?: string | null
+          completed_at?: string | null
+          created_at?: string
+          health_centre?: string
+          health_worker_id?: string | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          priority?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          visit_id: string
+        }
+        Update: {
+          assigned_doctor?: string | null
+          completed_at?: string | null
+          created_at?: string
+          health_centre?: string
+          health_worker_id?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          priority?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultations_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultations_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       first_aid_protocols: {
         Row: {
           condition_name: string
@@ -41,38 +158,283 @@ export type Database = {
         }
         Relationships: []
       }
+      follow_ups: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          due_date: string
+          health_centre: string
+          id: string
+          instructions: string | null
+          patient_id: string
+          priority: string
+          reason: string | null
+          status: string
+          updated_at: string
+          visit_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          due_date: string
+          health_centre?: string
+          id?: string
+          instructions?: string | null
+          patient_id: string
+          priority?: string
+          reason?: string | null
+          status?: string
+          updated_at?: string
+          visit_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          due_date?: string
+          health_centre?: string
+          id?: string
+          instructions?: string | null
+          patient_id?: string
+          priority?: string
+          reason?: string | null
+          status?: string
+          updated_at?: string
+          visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_ups_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_ups_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          audience: string
+          body: string | null
+          created_at: string
+          health_centre: string | null
+          id: string
+          kind: string
+          read_at: string | null
+          title: string
+          user_id: string | null
+          visit_id: string | null
+        }
+        Insert: {
+          audience?: string
+          body?: string | null
+          created_at?: string
+          health_centre?: string | null
+          id?: string
+          kind?: string
+          read_at?: string | null
+          title: string
+          user_id?: string | null
+          visit_id?: string | null
+        }
+        Update: {
+          audience?: string
+          body?: string | null
+          created_at?: string
+          health_centre?: string | null
+          id?: string
+          kind?: string
+          read_at?: string | null
+          title?: string
+          user_id?: string | null
+          visit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patients: {
         Row: {
           age: number
+          contact: string | null
           created_at: string
+          created_by: string | null
+          health_centre: string
           id: string
+          location: string | null
           name: string
           preferred_language: string
         }
         Insert: {
           age: number
+          contact?: string | null
           created_at?: string
+          created_by?: string | null
+          health_centre?: string
           id?: string
+          location?: string | null
           name: string
           preferred_language?: string
         }
         Update: {
           age?: number
+          contact?: string | null
           created_at?: string
+          created_by?: string | null
+          health_centre?: string
           id?: string
+          location?: string | null
           name?: string
           preferred_language?: string
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          health_centre: string
+          id: string
+          notify_consultation: boolean
+          notify_followup: boolean
+          notify_red: boolean
+          preferred_patient_language: string
+          ui_language: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string
+          health_centre?: string
+          id: string
+          notify_consultation?: boolean
+          notify_followup?: boolean
+          notify_red?: boolean
+          preferred_patient_language?: string
+          ui_language?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          health_centre?: string
+          id?: string
+          notify_consultation?: boolean
+          notify_followup?: boolean
+          notify_red?: boolean
+          preferred_patient_language?: string
+          ui_language?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          doctor_id: string | null
+          facility: string | null
+          health_centre: string
+          id: string
+          notes: string | null
+          patient_id: string
+          reason: string
+          risk_tier: string | null
+          status: string
+          updated_at: string
+          visit_id: string
+        }
+        Insert: {
+          created_at?: string
+          doctor_id?: string | null
+          facility?: string | null
+          health_centre?: string
+          id?: string
+          notes?: string | null
+          patient_id: string
+          reason: string
+          risk_tier?: string | null
+          status?: string
+          updated_at?: string
+          visit_id: string
+        }
+        Update: {
+          created_at?: string
+          doctor_id?: string | null
+          facility?: string | null
+          health_centre?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          reason?: string
+          risk_tier?: string | null
+          status?: string
+          updated_at?: string
+          visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       visits: {
         Row: {
+          ai_status: string
+          assigned_doctor: string | null
           confirmation_message: string | null
           created_at: string
+          created_by: string | null
           doctor_decision: string | null
           doctor_notes: string | null
           drug_safety_info: Json | null
           duration: string | null
+          emergency_acknowledged: boolean
+          finalized_at: string | null
+          health_centre: string
           history_text: string | null
           id: string
           image_analysis: string | null
@@ -80,20 +442,28 @@ export type Database = {
           patient_id: string
           preliminary_assessment: string | null
           protocol_text: string | null
+          referral_required: boolean
           risk_tier: string | null
           status: string
           structured_summary: Json | null
           symptoms_text: string
           triggering_rules: Json | null
+          updated_at: string
           vitals: Json
         }
         Insert: {
+          ai_status?: string
+          assigned_doctor?: string | null
           confirmation_message?: string | null
           created_at?: string
+          created_by?: string | null
           doctor_decision?: string | null
           doctor_notes?: string | null
           drug_safety_info?: Json | null
           duration?: string | null
+          emergency_acknowledged?: boolean
+          finalized_at?: string | null
+          health_centre?: string
           history_text?: string | null
           id?: string
           image_analysis?: string | null
@@ -101,20 +471,28 @@ export type Database = {
           patient_id: string
           preliminary_assessment?: string | null
           protocol_text?: string | null
+          referral_required?: boolean
           risk_tier?: string | null
           status?: string
           structured_summary?: Json | null
           symptoms_text: string
           triggering_rules?: Json | null
+          updated_at?: string
           vitals?: Json
         }
         Update: {
+          ai_status?: string
+          assigned_doctor?: string | null
           confirmation_message?: string | null
           created_at?: string
+          created_by?: string | null
           doctor_decision?: string | null
           doctor_notes?: string | null
           drug_safety_info?: Json | null
           duration?: string | null
+          emergency_acknowledged?: boolean
+          finalized_at?: string | null
+          health_centre?: string
           history_text?: string | null
           id?: string
           image_analysis?: string | null
@@ -122,11 +500,13 @@ export type Database = {
           patient_id?: string
           preliminary_assessment?: string | null
           protocol_text?: string | null
+          referral_required?: boolean
           risk_tier?: string | null
           status?: string
           structured_summary?: Json | null
           symptoms_text?: string
           triggering_rules?: Json | null
+          updated_at?: string
           vitals?: Json
         }
         Relationships: [
@@ -144,10 +524,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_doctor: { Args: never; Returns: boolean }
+      my_centre: { Args: never; Returns: string }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "health_worker" | "doctor" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -274,6 +662,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["health_worker", "doctor", "admin"],
+    },
   },
 } as const
