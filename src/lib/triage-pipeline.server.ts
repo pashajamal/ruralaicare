@@ -11,6 +11,7 @@ import {
   lookupAyurvedic,
   lookupProtocol,
   reasonAssessment,
+  criticalConditionCheck,
   scoreRisk,
   structureIntake,
   suggestionGuardrail,
@@ -169,6 +170,7 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
 
   let structured = fallback;
   let assessment: string | null = null;
+  let reasoningProvider: string | null = null;
   let imageAnalysis: string | null = null;
   let aiStatus: "ok" | "unavailable" = "ok";
 
@@ -203,9 +205,11 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
     aiStatus = "unavailable";
   }
 
-  // 2. Cautious preliminary assessment (never decides the tier)
+  // 2. Cautious preliminary assessment (never decides the tier) — Claude-backed
   try {
-    assessment = await reasonAssessment(structured, imageAnalysis);
+    const reasoning = await reasonAssessment(structured, imageAnalysis);
+    assessment = reasoning.text;
+    reasoningProvider = reasoning.provider;
   } catch (error) {
     console.error("reasoning failed", error);
     aiStatus = "unavailable";
@@ -219,6 +223,19 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
     conditionCtx,
     `${input.symptoms} ${structured.symptoms.join(" ")} ${input.history}`,
   );
+
+  // 3c. Critical-condition escalation check (Claude) — advisory, can only escalate.
+  try {
+    const critical = await criticalConditionCheck(structured, input.symptoms, imageAnalysis);
+    if (critical.critical && risk.tier !== "RED") {
+      risk.tier = "RED";
+      risk.rules.push(
+        `Critical-condition check escalated to RED — ${critical.reason ?? "possible life-threatening presentation"} (${critical.provider})`,
+      );
+    }
+  } catch (error) {
+    console.error("critical-condition check failed", error);
+  }
 
   // 4 + 5. GREEN only: fixed protocol lookup + OpenFDA drug safety. RED hard-stops.
   let protocolText: string | null = null;
@@ -304,6 +321,7 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
       ayurvedic_remedy: ayurvedic?.remedy_text ?? null,
       ayurvedic_source: ayurvedic?.source_reference ?? null,
       hospital_specialty_tag: specialtyFor(`${input.symptoms} ${structured.symptoms.join(" ")} ${assessment ?? ""}`),
+      reasoning_provider: reasoningProvider,
       ai_status: aiStatus,
       referral_required: risk.tier === "RED",
       updated_at: new Date().toISOString(),
