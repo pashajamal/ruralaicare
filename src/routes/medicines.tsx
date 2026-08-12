@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState, type FormEvent } from "react";
-import { Loader2, PackagePlus, Pill, Search } from "lucide-react";
+import { AlertTriangle, CalendarX, Loader2, PackagePlus, Pill, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
@@ -35,11 +35,44 @@ function MedicinesPage() {
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState({ medicine_name: "", quantity: "", expiry_date: "" });
   const [saving, setSaving] = useState(false);
+  const [threshold, setThreshold] = useState<number>(() => {
+    if (typeof window === "undefined") return 10;
+    const stored = Number(window.localStorage.getItem("medicine-low-stock-threshold"));
+    return Number.isFinite(stored) && stored > 0 ? stored : 10;
+  });
+
+  function updateThreshold(value: number) {
+    const next = Number.isFinite(value) && value >= 0 ? value : 0;
+    setThreshold(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("medicine-low-stock-threshold", String(next));
+    }
+  }
 
   const rows = useMemo(() => {
     const term = search.trim().toLowerCase();
     return (data ?? []).filter((r) => !term || r.medicine_name.toLowerCase().includes(term));
   }, [data, search]);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const soon = new Date(today);
+  soon.setDate(soon.getDate() + 30);
+
+  function statusOf(r: { quantity: number; expiry_date: string | null }) {
+    const exp = r.expiry_date ? new Date(r.expiry_date) : null;
+    if (exp && exp < today) return "expired" as const;
+    if (r.quantity <= 0) return "out" as const;
+    if (exp && exp <= soon) return "expiring" as const;
+    if (r.quantity <= threshold) return "low" as const;
+    return "ok" as const;
+  }
+
+  const all = data ?? [];
+  const expired = all.filter((r) => statusOf(r) === "expired");
+  const out = all.filter((r) => statusOf(r) === "out");
+  const low = all.filter((r) => statusOf(r) === "low");
+  const expiring = all.filter((r) => statusOf(r) === "expiring");
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
