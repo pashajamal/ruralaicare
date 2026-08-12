@@ -564,6 +564,50 @@ export type Database = {
           },
         ]
       }
+      patient_conditions: {
+        Row: {
+          condition_name: string
+          created_at: string
+          diagnosed_note: string | null
+          health_centre: string
+          id: string
+          medication_name: string | null
+          on_medication: boolean
+          patient_id: string
+          updated_at: string
+        }
+        Insert: {
+          condition_name: string
+          created_at?: string
+          diagnosed_note?: string | null
+          health_centre?: string
+          id?: string
+          medication_name?: string | null
+          on_medication?: boolean
+          patient_id: string
+          updated_at?: string
+        }
+        Update: {
+          condition_name?: string
+          created_at?: string
+          diagnosed_note?: string | null
+          health_centre?: string
+          id?: string
+          medication_name?: string | null
+          on_medication?: boolean
+          patient_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_conditions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patients: {
         Row: {
           age: number
@@ -576,6 +620,7 @@ export type Database = {
           mobile_number: string
           name: string
           preferred_language: string
+          sex: string | null
         }
         Insert: {
           age: number
@@ -588,6 +633,7 @@ export type Database = {
           mobile_number: string
           name: string
           preferred_language?: string
+          sex?: string | null
         }
         Update: {
           age?: number
@@ -600,6 +646,7 @@ export type Database = {
           mobile_number?: string
           name?: string
           preferred_language?: string
+          sex?: string | null
         }
         Relationships: []
       }
@@ -829,6 +876,7 @@ export type Database = {
           ayurvedic_condition: string | null
           ayurvedic_remedy: string | null
           ayurvedic_source: string | null
+          chronic_conditions: Json | null
           confirmation_message: string | null
           created_at: string
           created_by: string | null
@@ -845,6 +893,7 @@ export type Database = {
           image_analysis: string | null
           image_url: string | null
           patient_id: string
+          pregnancy_status: Json | null
           preliminary_assessment: string | null
           protocol_text: string | null
           referral_required: boolean
@@ -862,6 +911,7 @@ export type Database = {
           ayurvedic_condition?: string | null
           ayurvedic_remedy?: string | null
           ayurvedic_source?: string | null
+          chronic_conditions?: Json | null
           confirmation_message?: string | null
           created_at?: string
           created_by?: string | null
@@ -878,6 +928,7 @@ export type Database = {
           image_analysis?: string | null
           image_url?: string | null
           patient_id: string
+          pregnancy_status?: Json | null
           preliminary_assessment?: string | null
           protocol_text?: string | null
           referral_required?: boolean
@@ -895,6 +946,7 @@ export type Database = {
           ayurvedic_condition?: string | null
           ayurvedic_remedy?: string | null
           ayurvedic_source?: string | null
+          chronic_conditions?: Json | null
           confirmation_message?: string | null
           created_at?: string
           created_by?: string | null
@@ -911,6 +963,7 @@ export type Database = {
           image_analysis?: string | null
           image_url?: string | null
           patient_id?: string
+          pregnancy_status?: Json | null
           preliminary_assessment?: string | null
           protocol_text?: string | null
           referral_required?: boolean
