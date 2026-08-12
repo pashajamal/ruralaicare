@@ -125,7 +125,8 @@ function AssistantPage() {
         <section className="min-h-64 space-y-3 rounded-2xl border border-border bg-card p-5 shadow-sm">
           {messages.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Ask a question about the selected case. Answers are drawn only from that patient's recorded data.
+              Ask any general health question, or select a patient to get answers grounded in that case record. Tap the
+              mic to ask by voice, and "Listen" to hear the answer in your language.
             </p>
           ) : (
             messages.map((m, i) => (
@@ -156,7 +157,7 @@ function AssistantPage() {
             rows={2}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Ask about this patient's case…"
+            placeholder="Ask a health question, or about the selected patient…"
             aria-label="Question"
           />
           <VoiceRecorder
