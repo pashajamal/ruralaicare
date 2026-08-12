@@ -18,6 +18,7 @@ import { toast } from "sonner";
 
 import { AppShell, useOnline } from "@/components/AppShell";
 import { ChronicConditionsSection, useConditionsForm } from "@/components/ChronicConditionsSection";
+import { VoiceRecorder } from "@/components/VoiceRecorder";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +32,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { AUTO_DETECT, PATIENT_LANGUAGES } from "@/lib/speech";
 import { submitIntake } from "@/lib/triage.functions";
 import {
   addPending,
@@ -63,7 +65,6 @@ export const Route = createFileRoute("/intake")({
   component: IntakePage,
 });
 
-const LANGUAGES = ["English", "Hindi", "Hinglish"];
 const DRAFT_FIELDS = ["name", "age", "mobile_number", "symptoms", "duration", "history", "temp", "bp", "pulse", "spo2"] as const;
 const PHONE_RE = /^\+?[0-9][0-9\s-]{7,14}$/;
 type SyncState = "empty" | "draft" | "saving" | "synced";
@@ -73,13 +74,17 @@ export function IntakePage() {
   const run = useServerFn(submitIntake);
   const { profile, isDoctor, loading } = useAuth();
   const { online } = useOnline();
-  const [language, setLanguage] = useState("English");
+  const [language, setLanguage] = useState<string>(AUTO_DETECT);
+  const [detected, setDetected] = useState<string | null>(null);
+  const [voiceFilled, setVoiceFilled] = useState<Record<string, boolean>>({});
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [warnings, setWarnings] = useState<VitalWarning[]>([]);
   const [pending, setPending] = useState<PendingIntake[]>([]);
   const [syncing, setSyncing] = useState(false);
   const formRef = useRef<HTMLFormElement | null>(null);
+  const symptomsRef = useRef<HTMLTextAreaElement | null>(null);
+  const historyRef = useRef<HTMLTextAreaElement | null>(null);
   const restoredRef = useRef(false);
   const [syncState, setSyncState] = useState<SyncState>("empty");
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
@@ -141,6 +146,16 @@ export function IntakePage() {
     setDraftSavedAt(null);
     setSyncState("empty");
     setWarnings([]);
+  }
+
+  /** Voice fills the field; the worker still reviews and edits the text before submitting. */
+  function applyTranscript(field: "symptoms" | "history", text: string, detectedLanguage: string) {
+    const el = field === "symptoms" ? symptomsRef.current : historyRef.current;
+    if (!el) return;
+    el.value = el.value.trim() ? `${el.value.trim()} ${text}` : text;
+    setVoiceFilled((prev) => ({ ...prev, [field]: true }));
+    setDetected(detectedLanguage);
+    saveDraft();
   }
 
   function readForm(form: FormData) {
