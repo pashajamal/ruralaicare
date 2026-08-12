@@ -8,7 +8,7 @@ import { blobToBase64, encodeWav } from "@/lib/speech";
 import { transcribeVoiceNote } from "@/lib/voice.functions";
 
 type Props = {
-  field: "symptoms" | "history";
+  field: "symptoms" | "history" | "question";
   languageHint: string;
   /** Called with the transcript so the caller can fill the (still editable) text field. */
   onTranscript: (text: string, detectedLanguage: string) => void;

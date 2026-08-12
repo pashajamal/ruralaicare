@@ -6,7 +6,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 const TranscribeSchema = z.object({
   audio_base64: z.string().min(100),
   format: z.string().default("wav"),
-  field: z.enum(["symptoms", "history"]),
+  field: z.enum(["symptoms", "history", "question"]),
   language_hint: z.string().default("Auto-detect"),
 });
 
