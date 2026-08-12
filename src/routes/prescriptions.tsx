@@ -6,6 +6,7 @@ import { FileSpreadsheet, ImagePlus, Loader2, ScanText } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
+import { MedicineDatasetPanel } from "@/components/MedicineDatasetPanel";
 import { SymptomDatasetPanel } from "@/components/SymptomDatasetPanel";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -300,6 +301,7 @@ function PrescriptionsPage() {
         </section>
 
         <SymptomDatasetPanel />
+        <MedicineDatasetPanel />
 
         <section className="flex flex-col gap-4">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Processed prescriptions</h2>
