@@ -53,8 +53,7 @@ Return ONLY JSON: {"transcript":string,"detected_language":string}
           ],
         },
       ],
-    }),
-  });
+  }));
 
   if (!res.ok) throw mapError(res.status);
   const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
@@ -86,8 +85,7 @@ export async function synthesizeSpeech(text: string, language: string): Promise<
       response_format: "mp3",
       input: text,
       instructions: `Read aloud calmly and clearly in ${language}, at a slow pace suitable for a patient in a clinic.`,
-    }),
-  });
+  }));
 
   if (!res.ok) throw mapError(res.status);
   const bytes = new Uint8Array(await res.arrayBuffer());

@@ -72,8 +72,7 @@ async function callGateway(system: string, user: string): Promise<string> {
         { role: "system", content: system },
         { role: "user", content: user },
       ],
-    }),
-  });
+  }));
 
   if (res.status === 429) throw new Error("AI rate limit reached. Please retry in a moment.");
   if (res.status === 402) throw new Error("AI credits exhausted.");

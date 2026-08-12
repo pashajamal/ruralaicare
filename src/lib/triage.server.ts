@@ -20,8 +20,7 @@ async function callGemini(
         { role: "user", content },
       ],
       ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
-    }),
-  });
+  }));
 
   if (res.status === 429) throw new Error("AI rate limit reached. Please retry in a moment.");
   if (res.status === 402) throw new Error("AI credits exhausted. Add credits to continue.");
