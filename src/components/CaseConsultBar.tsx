@@ -1,13 +1,15 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, Loader2, MessageSquare, Mic, MicOff, Phone, PhoneOff, Send, Video, X } from "lucide-react";
+import { AlertTriangle, Loader2, MessageSquare, Phone, Radio, Send, Video } from "lucide-react";
 import { toast } from "sonner";
 
+import { CallRoom, type CallVisit } from "@/components/CallRoom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { formatDateTime, logAudit, notify } from "@/lib/clinic";
+import { useClinicPresence } from "@/lib/presence";
 
 type ConsultType = "chat" | "audio" | "video";
 
@@ -17,6 +19,7 @@ type Props = {
   patientName: string;
   visitCentre: string;
   tier: string;
+  callVisit?: CallVisit;
 };
 
 type Message = {
@@ -28,12 +31,13 @@ type Message = {
   created_at: string;
 };
 
-export function CaseConsultBar({ visitId, patientId, patientName, visitCentre, tier }: Props) {
+export function CaseConsultBar({ visitId, patientId, patientName, visitCentre, tier, callVisit }: Props) {
   const { profile, role, isDoctor, session } = useAuth();
   const qc = useQueryClient();
+  const { doctorOnline, doctors } = useClinicPresence();
   const [chatOpen, setChatOpen] = useState(false);
   const [call, setCall] = useState<{ type: "audio" | "video"; id: string | null } | null>(null);
-  const [starting, setStarting] = useState<ConsultType | "urgent" | null>(null);
+  const [starting, setStarting] = useState<ConsultType | "urgent" | "request" | null>(null);
 
   const actor = {
     id: profile?.id,
