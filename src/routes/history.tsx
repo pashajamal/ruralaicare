@@ -167,6 +167,11 @@ function HistoryPage() {
                         ) : (
                           "—"
                         )}
+                        <ConditionBadges
+                          patientId={patient?.id ?? null}
+                          pregnancy={(v.pregnancy_status ?? null) as PregnancyStatus | null}
+                          className="mt-1"
+                        />
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">{patient?.age ?? "—"}</td>
                       <td className="px-4 py-3 text-muted-foreground">{formatDateTime(v.created_at)}</td>
