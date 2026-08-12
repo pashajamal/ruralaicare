@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.2",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://jbbhqtjhfajohpwwywka.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "ai-virtual-clinic",
+      "version": "0.1.0",
+      "title": "AI Virtual Clinic"
+    },
+    "tools": [
+      {
+        "name": "search_patients",
+        "title": "Search patients",
+        "description": "Search patients you have access to by name or mobile number.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Name fragment or mobile number to search for."
+            },
+            "limit": {
+              "default": 10,
+              "description": "Maximum number of patients to return.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          },
+          "required": [
+            "query"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_visits",
+        "title": "List patient visits",
+        "description": "List recent patient visits (the triage queue), optionally filtered by risk tier, status, or patient.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "risk_tier": {
+              "description": "Filter by deterministic risk tier.",
+              "type": "string",
+              "enum": [
+                "RED",
+                "YELLOW",
+                "GREEN"
+              ]
+            },
+            "status": {
+              "description": "Filter by review status.",
+              "type": "string",
+              "enum": [
+                "pending_review",
+                "finalized"
+              ]
+            },
+            "patient_id": {
+              "description": "Restrict to a single patient.",
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "limit": {
+              "default": 10,
+              "description": "Maximum number of visits to return.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_visit",
+        "title": "Get visit detail",
+        "description": "Fetch the full triage record for one visit: vitals, structured summary, risk tier, triggering rules, AI suggestion and doctor decision.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "visit_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "The visit id."
+            }
+          },
+          "required": [
+            "visit_id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "add_doctor_note",
+        "title": "Add doctor note to a visit",
+        "description": "Append a reviewing-doctor note to a visit. Does not finalize the case or change the AI risk tier; finalization stays in the app.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "visit_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "The visit id."
+            },
+            "note": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000,
+              "description": "Note text to record on the visit."
+            }
+          },
+          "required": [
+            "visit_id",
+            "note"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
