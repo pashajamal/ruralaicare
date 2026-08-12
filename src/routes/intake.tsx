@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState, type FormEvent } from "react";
-import { AlertTriangle, CloudOff, ImageUp, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
+import { AlertTriangle, CloudOff, ImageUp, Loader2, RefreshCw, Sparkles, Stethoscope, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell, useOnline } from "@/components/AppShell";
@@ -46,7 +46,7 @@ const LANGUAGES = ["English", "Hindi", "Bangla", "Arabic"];
 export function IntakePage() {
   const navigate = useNavigate();
   const run = useServerFn(submitIntake);
-  const { profile } = useAuth();
+  const { profile, isDoctor, loading } = useAuth();
   const { online } = useOnline();
   const [language, setLanguage] = useState("English");
   const [file, setFile] = useState<File | null>(null);
@@ -170,6 +170,23 @@ export function IntakePage() {
 
   const emergencyWarnings = warnings.filter((w) => w.level === "emergency");
   const verifyWarnings = warnings.filter((w) => w.level === "verify");
+
+  if (!loading && isDoctor) {
+    return (
+      <AppShell>
+        <div className="mx-auto max-w-md rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
+          <Stethoscope className="mx-auto size-8 text-primary" aria-hidden />
+          <h1 className="mt-3 text-lg font-semibold">Intake is for health workers</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Doctors review and finalize submitted cases rather than recording new intakes.
+          </p>
+          <Button asChild className="mt-4 w-full">
+            <Link to="/doctor">Go to review queue</Link>
+          </Button>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>

@@ -92,11 +92,17 @@ function DashboardPage() {
                 </Link>
               </Button>
             ) : null}
-            <Button asChild variant="outline">
-              <Link to="/doctor">
-                <Stethoscope className="size-4" aria-hidden /> Doctor workspace
-              </Link>
-            </Button>
+            {isDoctor ? (
+              <Button asChild variant="outline">
+                <Link to="/doctor">
+                  <Stethoscope className="size-4" aria-hidden /> Review queue
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild variant="outline">
+                <Link to="/my-cases">My submitted cases</Link>
+              </Button>
+            )}
           </div>
         </header>
 
