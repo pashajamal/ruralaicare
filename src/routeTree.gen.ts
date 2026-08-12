@@ -33,7 +33,6 @@ import { Route as TrendsRouteImport } from './routes/trends'
 import { Route as PatientsPatientIdRouteImport } from './routes/patients.$patientId'
 import { Route as ReferralVisitIdRouteImport } from './routes/referral.$visitId'
 import { Route as ReviewVisitIdRouteImport } from './routes/review.$visitId'
-import { Route as ApiPublicGeminiTestRouteImport } from './routes/api/public/gemini-test'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -155,11 +154,6 @@ const ReviewVisitIdRoute = ReviewVisitIdRouteImport.update({
   path: '/review/$visitId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicGeminiTestRoute = ApiPublicGeminiTestRouteImport.update({
-  id: '/api/public/gemini-test',
-  path: '/api/public/gemini-test',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -186,7 +180,6 @@ export interface FileRoutesByFullPath {
   '/patients/$patientId': typeof PatientsPatientIdRoute
   '/referral/$visitId': typeof ReferralVisitIdRoute
   '/review/$visitId': typeof ReviewVisitIdRoute
-  '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -213,7 +206,6 @@ export interface FileRoutesByTo {
   '/patients/$patientId': typeof PatientsPatientIdRoute
   '/referral/$visitId': typeof ReferralVisitIdRoute
   '/review/$visitId': typeof ReviewVisitIdRoute
-  '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -241,7 +233,6 @@ export interface FileRoutesById {
   '/patients/$patientId': typeof PatientsPatientIdRoute
   '/referral/$visitId': typeof ReferralVisitIdRoute
   '/review/$visitId': typeof ReviewVisitIdRoute
-  '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -270,7 +261,6 @@ export interface FileRouteTypes {
     | '/patients/$patientId'
     | '/referral/$visitId'
     | '/review/$visitId'
-    | '/api/public/gemini-test'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -297,7 +287,6 @@ export interface FileRouteTypes {
     | '/patients/$patientId'
     | '/referral/$visitId'
     | '/review/$visitId'
-    | '/api/public/gemini-test'
   id:
     | '__root__'
     | '/'
@@ -324,7 +313,6 @@ export interface FileRouteTypes {
     | '/patients/$patientId'
     | '/referral/$visitId'
     | '/review/$visitId'
-    | '/api/public/gemini-test'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -352,7 +340,6 @@ export interface RootRouteChildren {
   PatientsPatientIdRoute: typeof PatientsPatientIdRoute
   ReferralVisitIdRoute: typeof ReferralVisitIdRoute
   ReviewVisitIdRoute: typeof ReviewVisitIdRoute
-  ApiPublicGeminiTestRoute: typeof ApiPublicGeminiTestRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -525,13 +512,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReviewVisitIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/gemini-test': {
-      id: '/api/public/gemini-test'
-      path: '/api/public/gemini-test'
-      fullPath: '/api/public/gemini-test'
-      preLoaderRoute: typeof ApiPublicGeminiTestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -560,7 +540,6 @@ const rootRouteChildren: RootRouteChildren = {
   PatientsPatientIdRoute: PatientsPatientIdRoute,
   ReferralVisitIdRoute: ReferralVisitIdRoute,
   ReviewVisitIdRoute: ReviewVisitIdRoute,
-  ApiPublicGeminiTestRoute: ApiPublicGeminiTestRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
