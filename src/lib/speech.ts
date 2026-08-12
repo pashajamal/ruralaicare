@@ -12,8 +12,6 @@ export const PATIENT_LANGUAGES = [
   "Tamil",
   "Telugu",
   "Marathi",
-  "Urdu",
-  "Arabic",
 ] as const;
 
 export type PatientLanguage = (typeof PATIENT_LANGUAGES)[number];
@@ -26,8 +24,6 @@ const LOCALES: Record<string, string> = {
   Tamil: "ta-IN",
   Telugu: "te-IN",
   Marathi: "mr-IN",
-  Urdu: "ur-PK",
-  Arabic: "ar-SA",
 };
 
 /** BCP-47 locale used for the `lang` attribute / speech output hints. */

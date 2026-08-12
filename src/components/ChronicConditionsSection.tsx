@@ -158,11 +158,17 @@ export function ChronicConditionsSection({ form }: { form: ConditionsForm }) {
                 {entry.checked ? (
                   <div className="mt-3 space-y-2 pl-6">
                     {condition === OTHER_CONDITION ? (
-                      <Input
-                        value={otherName}
-                        onChange={(e) => setOtherName(e.target.value)}
-                        placeholder="Other, specify"
-                      />
+                      <div className="space-y-1">
+                        <Label htmlFor="other-condition-name" className="text-xs text-muted-foreground">
+                          Disease / condition name
+                        </Label>
+                        <Input
+                          id="other-condition-name"
+                          value={otherName}
+                          onChange={(e) => setOtherName(e.target.value)}
+                          placeholder="e.g. Epilepsy, Tuberculosis, Anaemia"
+                        />
+                      </div>
                     ) : null}
                     <label className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Checkbox
