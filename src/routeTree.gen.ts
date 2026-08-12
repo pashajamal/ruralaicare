@@ -14,6 +14,7 @@ import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AssistantRouteImport } from './routes/assistant'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CarePlansRouteImport } from './routes/care-plans'
+import { Route as ClinicalEvalRouteImport } from './routes/clinical-eval'
 import { Route as DoctorRouteImport } from './routes/doctor'
 import { Route as FollowupsRouteImport } from './routes/followups'
 import { Route as HistoryRouteImport } from './routes/history'
@@ -54,6 +55,11 @@ const AuthRoute = AuthRouteImport.update({
 const CarePlansRoute = CarePlansRouteImport.update({
   id: '/care-plans',
   path: '/care-plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClinicalEvalRoute = ClinicalEvalRouteImport.update({
+  id: '/clinical-eval',
+  path: '/clinical-eval',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DoctorRoute = DoctorRouteImport.update({
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/assistant': typeof AssistantRoute
   '/auth': typeof AuthRoute
   '/care-plans': typeof CarePlansRoute
+  '/clinical-eval': typeof ClinicalEvalRoute
   '/doctor': typeof DoctorRoute
   '/followups': typeof FollowupsRoute
   '/history': typeof HistoryRoute
@@ -166,6 +173,7 @@ export interface FileRoutesByTo {
   '/assistant': typeof AssistantRoute
   '/auth': typeof AuthRoute
   '/care-plans': typeof CarePlansRoute
+  '/clinical-eval': typeof ClinicalEvalRoute
   '/doctor': typeof DoctorRoute
   '/followups': typeof FollowupsRoute
   '/history': typeof HistoryRoute
@@ -190,6 +198,7 @@ export interface FileRoutesById {
   '/assistant': typeof AssistantRoute
   '/auth': typeof AuthRoute
   '/care-plans': typeof CarePlansRoute
+  '/clinical-eval': typeof ClinicalEvalRoute
   '/doctor': typeof DoctorRoute
   '/followups': typeof FollowupsRoute
   '/history': typeof HistoryRoute
@@ -215,6 +224,7 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/auth'
     | '/care-plans'
+    | '/clinical-eval'
     | '/doctor'
     | '/followups'
     | '/history'
@@ -238,6 +248,7 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/auth'
     | '/care-plans'
+    | '/clinical-eval'
     | '/doctor'
     | '/followups'
     | '/history'
@@ -261,6 +272,7 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/auth'
     | '/care-plans'
+    | '/clinical-eval'
     | '/doctor'
     | '/followups'
     | '/history'
@@ -285,6 +297,7 @@ export interface RootRouteChildren {
   AssistantRoute: typeof AssistantRoute
   AuthRoute: typeof AuthRoute
   CarePlansRoute: typeof CarePlansRoute
+  ClinicalEvalRoute: typeof ClinicalEvalRoute
   DoctorRoute: typeof DoctorRoute
   FollowupsRoute: typeof FollowupsRoute
   HistoryRoute: typeof HistoryRoute
@@ -338,6 +351,13 @@ declare module '@tanstack/react-router' {
       path: '/care-plans'
       fullPath: '/care-plans'
       preLoaderRoute: typeof CarePlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clinical-eval': {
+      id: '/clinical-eval'
+      path: '/clinical-eval'
+      fullPath: '/clinical-eval'
+      preLoaderRoute: typeof ClinicalEvalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/doctor': {
@@ -461,6 +481,7 @@ const rootRouteChildren: RootRouteChildren = {
   AssistantRoute: AssistantRoute,
   AuthRoute: AuthRoute,
   CarePlansRoute: CarePlansRoute,
+  ClinicalEvalRoute: ClinicalEvalRoute,
   DoctorRoute: DoctorRoute,
   FollowupsRoute: FollowupsRoute,
   HistoryRoute: HistoryRoute,
