@@ -137,6 +137,27 @@ export function CaseConsultBar({ visitId, patientId, patientName, visitCentre, t
     toast.success("Urgent consult raised — pinned to the top of the doctor's review queue");
   }
 
+  /** Escalation only: puts the case in the live consultation queue without leaving the async flow. */
+  async function onRequestLive() {
+    setStarting("request");
+    const id = await startConsultation(tier === "RED" ? "video" : "video", tier === "RED");
+    setStarting(null);
+    if (!id) return;
+    await notify({
+      audience: isDoctor ? "health_worker" : "doctor",
+      title: "Live consultation requested",
+      body: `${patientName} · ${tier} tier — ${profile?.full_name ?? "Clinic staff"}`,
+      kind: "consultation",
+      visitId,
+      healthCentre: profile?.health_centre ?? visitCentre,
+    });
+    toast.success(
+      doctorOnline
+        ? "Live consultation requested — it's now in the consultation queue"
+        : "Doctor offline — request queued; the case stays in async review",
+    );
+  }
+
   async function endCall() {
     if (call?.id) {
       await supabase
@@ -152,6 +173,10 @@ export function CaseConsultBar({ visitId, patientId, patientName, visitCentre, t
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
+        <Button size="sm" onClick={onRequestLive} disabled={starting === "request"}>
+          {starting === "request" ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Video className="size-4" aria-hidden />}
+          Request Live Consultation
+        </Button>
         <Button size="sm" variant={chatOpen ? "default" : "outline"} onClick={onChat} disabled={starting === "chat"}>
           {starting === "chat" ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <MessageSquare className="size-4" aria-hidden />}
           Chat
@@ -180,6 +205,16 @@ export function CaseConsultBar({ visitId, patientId, patientName, visitCentre, t
           </Button>
         ) : null}
       </div>
+
+      <p
+        className={`flex items-center gap-2 text-xs font-medium ${doctorOnline ? "text-risk-green" : "text-risk-amber"}`}
+        aria-live="polite"
+      >
+        <Radio className="size-3.5" aria-hidden />
+        {doctorOnline
+          ? `Doctor online (${doctors.length}) — a live call can connect now`
+          : "Doctor offline — case remains in async review queue"}
+      </p>
 
       {urgent ? (
         <p className="flex items-center gap-2 rounded-xl border border-risk-red/30 bg-risk-red-soft px-3 py-2 text-xs font-semibold text-risk-red">
