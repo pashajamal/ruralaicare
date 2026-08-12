@@ -46,14 +46,25 @@ export async function geminiFetch(
       ? { ...body, model: mapModel(body["model"]) }
       : body;
 
-  const res = await fetch(`${base}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-    body: JSON.stringify(payload),
-  });
+  const maxRetries = 3;
+  let lastRes: Response | null = null;
 
-  if (res.status === 401 || res.status === 403) throw new Error(KEY_ERROR);
-  return res;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const res = await fetch(`${base}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      body: JSON.stringify(payload),
+    });
+
+    if (res.status === 401 || res.status === 403) throw new Error(KEY_ERROR);
+    if (res.status !== 429 || attempt === maxRetries) return res;
+
+    lastRes = res;
+    // Wait 1.2s before retrying when rate limited
+    await new Promise((r) => setTimeout(r, 1200 * attempt));
+  }
+
+  return lastRes!;
 }
 
 export async function geminiChat(input: {
