@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { Json } from "@/integrations/supabase/types";
 import {
   analyzeImage,
   fetchDrugSafety,
@@ -41,7 +42,7 @@ export async function runIntakePipeline(input: IntakeInput) {
       symptoms_text: input.symptoms,
       duration: input.duration,
       history_text: input.history,
-      vitals: input.vitals as unknown as Record<string, unknown>,
+      vitals: (input.vitals as unknown as Json),
       image_url: input.image_path ?? null,
       status: "pending_review",
     })
@@ -90,13 +91,13 @@ export async function runIntakePipeline(input: IntakeInput) {
     await supabaseAdmin
       .from("visits")
       .update({
-        structured_summary: structured as unknown as Record<string, unknown>,
+        structured_summary: (structured as unknown as Json),
         preliminary_assessment: assessment,
         confirmation_message: structured.confirmation_message ?? null,
         risk_tier: risk.tier,
         triggering_rules: risk.rules,
         protocol_text: protocolText,
-        drug_safety_info: drugSafety as unknown as Record<string, unknown> | null,
+        drug_safety_info: (drugSafety as unknown as Json),
       })
       .eq("id", visit.id);
 

@@ -59,10 +59,10 @@ function parseJson<T>(raw: string, fallback: T): T {
 }
 
 export type Vitals = {
-  temp?: number | null;
-  bp?: string | null;
-  pulse?: number | null;
-  spo2?: number | null;
+  temp?: number | null | undefined;
+  bp?: string | null | undefined;
+  pulse?: number | null | undefined;
+  spo2?: number | null | undefined;
 };
 
 export type StructuredSummary = {
