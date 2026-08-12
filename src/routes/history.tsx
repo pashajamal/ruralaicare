@@ -1,25 +1,191 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { Loader2, Search } from "lucide-react";
+
 import { AppShell } from "@/components/AppShell";
-import { VisitTable } from "@/components/VisitTable";
+import { RiskPill } from "@/components/risk";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { STATUS_LABEL, formatDateTime } from "@/lib/clinic";
 
 export const Route = createFileRoute("/history")({
   head: () => ({
     meta: [
       { title: "Patient History | AI Virtual Clinic" },
-      { name: "description", content: "Searchable record of every past visit, risk tier and review status." },
+      {
+        name: "description",
+        content: "Searchable visit history with risk tier, status, referral and doctor decision filters.",
+      },
       { property: "og:title", content: "Patient History | AI Virtual Clinic" },
-      { property: "og:description", content: "Searchable record of every past visit, risk tier and review status." },
+      { property: "og:description", content: "Every past visit, its risk tier and the doctor's final decision." },
     ],
   }),
-  component: () => (
+  component: HistoryPage,
+});
+
+const TIERS = ["All", "RED", "YELLOW", "GREEN"] as const;
+const STATUSES = ["All", "pending_review", "doctor_reviewing", "finalized"] as const;
+
+function HistoryPage() {
+  const [search, setSearch] = useState("");
+  const [tier, setTier] = useState<(typeof TIERS)[number]>("All");
+  const [status, setStatus] = useState<(typeof STATUSES)[number]>("All");
+  const [from, setFrom] = useState("");
+  const [referralOnly, setReferralOnly] = useState(false);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["history"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("visits")
+        .select("*, patients(id, name, age)")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const rows = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return (data ?? []).filter((v) => {
+      const patient = v.patients as { id?: string; name?: string } | null;
+      const matches =
+        !term ||
+        (patient?.name ?? "").toLowerCase().includes(term) ||
+        v.id.toLowerCase().startsWith(term) ||
+        (patient?.id ?? "").toLowerCase().startsWith(term);
+      if (!matches) return false;
+      if (tier !== "All" && v.risk_tier !== tier) return false;
+      if (status !== "All" && v.status !== status) return false;
+      if (referralOnly && !v.referral_required) return false;
+      if (from && v.created_at < from) return false;
+      return true;
+    });
+  }, [data, search, tier, status, from, referralOnly]);
+
+  return (
     <AppShell>
-      <div className="mx-auto max-w-5xl space-y-6">
+      <div className="mx-auto max-w-6xl space-y-5">
         <header>
           <h1 className="text-2xl font-semibold tracking-tight">Patient History</h1>
-          <p className="mt-1 text-sm text-muted-foreground">All recorded visits, pending and finalized.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Search by patient name, patient ID or visit ID. Open any record for the full clinical review.
+          </p>
         </header>
-        <VisitTable />
+
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative min-w-56 flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Patient name, patient ID or visit ID"
+              className="pl-9"
+              aria-label="Search visits"
+            />
+          </div>
+          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-40" aria-label="From date" />
+          <div className="flex gap-2">
+            {TIERS.map((option) => (
+              <button
+                key={option}
+                onClick={() => setTier(option)}
+                className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                  tier === option ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground"
+                }`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as (typeof STATUSES)[number])}
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+            aria-label="Filter by status"
+          >
+            {STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {s === "All" ? "All statuses" : STATUS_LABEL[s]}
+              </option>
+            ))}
+          </select>
+          <label className="flex items-center gap-2 text-xs font-semibold">
+            <input type="checkbox" className="size-4" checked={referralOnly} onChange={(e) => setReferralOnly(e.target.checked)} />
+            Referral required
+          </label>
+        </div>
+
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+          <table className="w-full text-sm">
+            <thead className="bg-secondary text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Patient</th>
+                <th className="px-4 py-3 font-semibold">Age</th>
+                <th className="px-4 py-3 font-semibold">Date</th>
+                <th className="px-4 py-3 font-semibold">Risk tier</th>
+                <th className="px-4 py-3 font-semibold">Status</th>
+                <th className="px-4 py-3 font-semibold">Decision</th>
+                <th className="px-4 py-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-10 text-center">
+                    <Loader2 className="mx-auto size-4 animate-spin" aria-hidden />
+                  </td>
+                </tr>
+              ) : isError ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                    Unable to load visit history. Check your connection and try again.
+                  </td>
+                </tr>
+              ) : rows.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                    No previous visits found.
+                  </td>
+                </tr>
+              ) : (
+                rows.map((v) => {
+                  const patient = v.patients as { id?: string; name?: string; age?: number } | null;
+                  return (
+                    <tr key={v.id} className="border-t border-border">
+                      <td className="px-4 py-3 font-medium">
+                        {patient?.id ? (
+                          <Link to="/patients/$patientId" params={{ patientId: patient.id }} className="underline-offset-4 hover:underline">
+                            {patient.name}
+                          </Link>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{patient?.age ?? "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{formatDateTime(v.created_at)}</td>
+                      <td className="px-4 py-3">
+                        <RiskPill tier={v.risk_tier} />
+                      </td>
+                      <td className="px-4 py-3 text-xs">{STATUS_LABEL[v.status] ?? v.status}</td>
+                      <td className="px-4 py-3 text-xs capitalize text-muted-foreground">{v.doctor_decision ?? "—"}</td>
+                      <td className="px-4 py-3 text-right">
+                        <Button asChild size="sm" variant="outline">
+                          <Link to="/review/$visitId" params={{ visitId: v.id }}>
+                            View
+                          </Link>
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </AppShell>
-  ),
-});
+  );
+}
