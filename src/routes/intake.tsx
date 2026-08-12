@@ -63,7 +63,7 @@ export const Route = createFileRoute("/intake")({
   component: IntakePage,
 });
 
-const LANGUAGES = ["English", "Hindi", "Bangla", "Arabic"];
+const LANGUAGES = ["English", "Hindi", "Hinglish"];
 const DRAFT_FIELDS = ["name", "age", "mobile_number", "symptoms", "duration", "history", "temp", "bp", "pulse", "spo2"] as const;
 const PHONE_RE = /^\+?[0-9][0-9\s-]{7,14}$/;
 type SyncState = "empty" | "draft" | "saving" | "synced";
