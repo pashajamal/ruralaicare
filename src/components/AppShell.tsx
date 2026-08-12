@@ -33,7 +33,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useAuth } from "@/lib/auth";
-import { t } from "@/lib/i18n";
+import { t, UI_LANGUAGES } from "@/lib/i18n";
+import { useLang } from "@/lib/lang";
 import { readPending } from "@/lib/offline";
 
 type NavItem = { to: string; key: Parameters<typeof t>[1]; icon: typeof LayoutDashboard };
@@ -168,7 +169,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { online, pending } = useOnline();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const lang = profile?.ui_language ?? "English";
+  const { lang, setLang } = useLang();
   const nav = isDoctor ? DOCTOR_NAV : WORKER_NAV;
 
   return (
@@ -273,6 +274,21 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             ) : null}
             <TrustBadge />
+            <label className="sr-only" htmlFor="lang-switch">
+              {t(lang, "language")}
+            </label>
+            <select
+              id="lang-switch"
+              value={lang}
+              onChange={(e) => setLang(e.target.value)}
+              className="h-8 rounded-full border border-border bg-secondary px-2 text-xs font-medium"
+            >
+              {UI_LANGUAGES.map((l) => (
+                <option key={l} value={l}>
+                  {l}
+                </option>
+              ))}
+            </select>
             {session ? <NotificationBell /> : null}
           </div>
         </header>
