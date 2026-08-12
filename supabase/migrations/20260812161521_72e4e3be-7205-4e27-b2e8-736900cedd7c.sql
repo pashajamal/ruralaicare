@@ -1,0 +1,1 @@
+UPDATE public.staging_symptom_disease SET processed = true WHERE processed = false;
