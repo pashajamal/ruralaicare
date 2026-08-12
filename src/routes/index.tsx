@@ -8,9 +8,9 @@ import { RiskPill } from "@/components/risk";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { t } from "@/lib/i18n";
+import { statusLabel, t } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
-import { formatDateTime, STATUS_LABEL, TIER_ORDER, waitingSince } from "@/lib/clinic";
+import { formatDateTime, TIER_ORDER, waitingSince } from "@/lib/clinic";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -114,7 +114,7 @@ function DashboardPage() {
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-risk-red/30 bg-risk-red-soft p-5 text-risk-red shadow-sm">
             <p className="flex items-center gap-2 text-sm font-bold">
               <AlertTriangle className="size-5" aria-hidden />
-              {red.length} emergency case{red.length > 1 ? "s" : ""} awaiting immediate doctor attention
+              {red.length} {t(lang, "emergencyAwaiting")}
             </p>
             <Button asChild size="sm" variant="destructive">
               <Link to="/doctor">{t(lang, "openEmergency")}</Link>
@@ -123,25 +123,25 @@ function DashboardPage() {
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Awaiting doctor review" value={pending.length} icon={Activity} />
-          <StatCard label="Emergency (RED) open" value={red.length} icon={AlertTriangle} tone="red" />
-          <StatCard label="Open referrals" value={openReferrals} icon={Send} />
-          <StatCard label="Open follow-ups" value={openFollowups} icon={CalendarClock} />
+          <StatCard label={t(lang, "statPending")} value={pending.length} icon={Activity} />
+          <StatCard label={t(lang, "statRed")} value={red.length} icon={AlertTriangle} tone="red" />
+          <StatCard label={t(lang, "statReferrals")} value={openReferrals} icon={Send} />
+          <StatCard label={t(lang, "statFollowups")} value={openFollowups} icon={CalendarClock} />
         </div>
 
         <div className="grid gap-5 lg:grid-cols-3">
           <section className="rounded-2xl border border-border bg-card p-5 shadow-sm lg:col-span-2">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Urgency-sorted queue
+                {t(lang, "urgentQueue")}
               </h2>
               <Link to="/queue" className="text-xs font-semibold text-primary underline-offset-4 hover:underline">
-                View all
+                {t(lang, "viewAll")}
               </Link>
             </div>
             <ul className="divide-y divide-border">
               {urgent.length === 0 ? (
-                <li className="py-6 text-sm text-muted-foreground">No cases waiting for review.</li>
+                <li className="py-6 text-sm text-muted-foreground">{t(lang, "noWaiting")}</li>
               ) : (
                 urgent.map((v, index) => {
                   const patient = v.patients as { name?: string; age?: number } | null;
@@ -151,12 +151,12 @@ function DashboardPage() {
                       <RiskPill tier={v.risk_tier} />
                       <span className="font-medium">{patient?.name ?? "—"}</span>
                       <span className="text-xs text-muted-foreground">
-                        {patient?.age ?? "—"} yrs · waiting {waitingSince(v.created_at)}
+                        {patient?.age ?? "—"} {t(lang, "yrs")} · {t(lang, "waitingWord")} {waitingSince(v.created_at)}
                       </span>
-                      <span className="ml-auto text-xs text-muted-foreground">{STATUS_LABEL[v.status] ?? v.status}</span>
+                      <span className="ml-auto text-xs text-muted-foreground">{statusLabel(lang, v.status)}</span>
                       <Button asChild size="sm" variant="outline">
                         <Link to="/review/$visitId" params={{ visitId: v.id }}>
-                          Open
+                          {t(lang, "open")}
                         </Link>
                       </Button>
                     </li>
@@ -169,25 +169,23 @@ function DashboardPage() {
           <section className="space-y-5">
             <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                AI–Doctor agreement
+                {t(lang, "agreementTitle")}
               </h2>
               <p className="mt-3 text-4xl font-semibold tabular-nums">{agreement === null ? "—" : `${agreement}%`}</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {finalized.length} finalized case{finalized.length === 1 ? "" : "s"} · {approved} approved without change
               </p>
-              <p className="mt-3 text-xs text-muted-foreground">
-                Measures how often doctors accept the AI draft unchanged. Overrides are expected and healthy.
-              </p>
+              <p className="mt-3 text-xs text-muted-foreground">{t(lang, "agreementHelp")}</p>
             </div>
 
             <div className="rounded-2xl border border-border bg-secondary p-5">
               <p className="flex items-center gap-2 text-sm font-semibold">
-                <ShieldCheck className="size-4 text-primary" aria-hidden /> Safety model
+                <ShieldCheck className="size-4 text-primary" aria-hidden /> {t(lang, "safetyModel")}
               </p>
               <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
-                <li>Risk tier is calculated by deterministic clinical rules, never by the AI.</li>
-                <li>The AI drafts a cautious summary only — it can never override an emergency rule.</li>
-                <li>No case is finalized until a doctor completes the safety gate and signs off.</li>
+                <li>{t(lang, "safety1")}</li>
+                <li>{t(lang, "safety2")}</li>
+                <li>{t(lang, "safety3")}</li>
               </ul>
             </div>
           </section>
@@ -202,7 +200,7 @@ function DashboardPage() {
         <DueReminders limit={5} compact />
 
         <p className="pb-2 text-xs text-muted-foreground">
-          Last updated {formatDateTime(new Date().toISOString())}
+          {t(lang, "lastUpdated")} {formatDateTime(new Date().toISOString())}
         </p>
       </div>
     </AppShell>

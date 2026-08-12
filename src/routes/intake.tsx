@@ -32,6 +32,8 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { t } from "@/lib/i18n";
+import { useLang } from "@/lib/lang";
 import { AUTO_DETECT, PATIENT_LANGUAGES } from "@/lib/speech";
 import { submitIntake } from "@/lib/triage.functions";
 import {
@@ -73,6 +75,7 @@ export function IntakePage() {
   const navigate = useNavigate();
   const run = useServerFn(submitIntake);
   const { profile, isDoctor, loading } = useAuth();
+  const { lang } = useLang();
   const { online } = useOnline();
   const [language, setLanguage] = useState<string>(AUTO_DETECT);
   const [detected, setDetected] = useState<string | null>(null);
@@ -308,15 +311,13 @@ export function IntakePage() {
     <AppShell>
       <div className="mx-auto max-w-4xl">
         <header className="mb-6">
-          <h1 className="text-2xl font-semibold tracking-tight">New Patient Intake</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Record what the patient reports. The AI drafts an assessment; a doctor decides.
-          </p>
+          <h1 className="text-2xl font-semibold tracking-tight">{t(lang, "intake")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t(lang, "intakeSubtitle")}</p>
         </header>
 
         <section className="mb-5 flex flex-wrap items-end gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
           <div className="min-w-56 space-y-2">
-            <Label htmlFor="language">Patient / consultation language</Label>
+            <Label htmlFor="language">{t(lang, "consultLanguage")}</Label>
             <Select value={language} onValueChange={(v) => { setLanguage(v); saveDraft(); }}>
               <SelectTrigger id="language">
                 <SelectValue />
@@ -355,7 +356,7 @@ export function IntakePage() {
             </p>
             <Button onClick={syncPending} disabled={!online || syncing} size="sm">
               {syncing ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <RefreshCw className="size-4" aria-hidden />}
-              Sync Records
+              {t(lang, "syncRecords")}
             </Button>
           </div>
         ) : null}
@@ -363,15 +364,15 @@ export function IntakePage() {
         <div className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
           {syncState === "saving" ? (
             <p className="flex items-center gap-2 text-sm font-medium">
-              <Loader2 className="size-4 animate-spin text-primary" aria-hidden /> Saving to the clinic record…
+              <Loader2 className="size-4 animate-spin text-primary" aria-hidden /> {t(lang, "savingRecord")}
             </p>
           ) : syncState === "synced" ? (
             <p className="flex items-center gap-2 text-sm font-medium text-risk-green">
-              <CheckCircle2 className="size-4" aria-hidden /> Saved to the clinic record
+              <CheckCircle2 className="size-4" aria-hidden /> {t(lang, "savedRecord")}
             </p>
           ) : syncState === "draft" ? (
             <p className="flex items-center gap-2 text-sm font-medium text-risk-amber">
-              <HardDriveDownload className="size-4" aria-hidden /> Draft saved on this device
+              <HardDriveDownload className="size-4" aria-hidden /> {t(lang, "draftSaved")}
               {draftSavedAt ? (
                 <span className="font-normal text-muted-foreground">
                   · {new Date(draftSavedAt).toLocaleTimeString()} · not yet in the clinic record
@@ -380,13 +381,12 @@ export function IntakePage() {
             </p>
           ) : (
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <HardDriveDownload className="size-4" aria-hidden /> Nothing typed yet — this form auto-saves a local draft
-              as you fill it in.
+              <HardDriveDownload className="size-4" aria-hidden /> {t(lang, "nothingTyped")}
             </p>
           )}
           {syncState === "draft" ? (
             <Button type="button" size="sm" variant="outline" className="ml-auto" onClick={discardDraft}>
-              <Trash2 className="size-4" aria-hidden /> Discard draft
+              <Trash2 className="size-4" aria-hidden /> {t(lang, "discardDraft")}
             </Button>
           ) : null}
         </div>
@@ -394,16 +394,16 @@ export function IntakePage() {
         <form ref={attachForm} onSubmit={onSubmit} onBlur={onValidate} onChange={saveDraft} className="space-y-5">
           <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Patient details
+              {t(lang, "patientDetails")}
             </h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="name">Patient name</Label>
-                <Input id="name" name="name" required placeholder="Full name" />
+                <Label htmlFor="name">{t(lang, "patientName")}</Label>
+                <Input id="name" name="name" required placeholder={t(lang, "fullName")} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="mobile_number">
-                  Mobile number <span className="text-risk-red">*</span>
+                  {t(lang, "mobileNumber")} <span className="text-risk-red">*</span>
                 </Label>
                 <Input
                   id="mobile_number"
@@ -416,25 +416,23 @@ export function IntakePage() {
                   placeholder="+91 98765 43210"
                   onChange={(e) => setMobile(e.target.value)}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Used to find this patient's past visits, care plans and consultations.
-                </p>
+                <p className="text-xs text-muted-foreground">{t(lang, "mobileHelp")}</p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="age">Age</Label>
-                <Input id="age" name="age" type="number" min={0} max={120} required placeholder="Years" />
+                <Label htmlFor="age">{t(lang, "age")}</Label>
+                <Input id="age" name="age" type="number" min={0} max={120} required placeholder={t(lang, "years")} />
               </div>
             </div>
           </section>
 
           <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Presenting complaint
+              {t(lang, "presentingComplaint")}
             </h2>
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <Label htmlFor="symptoms">Symptoms description</Label>
+                  <Label htmlFor="symptoms">{t(lang, "symptomsLabel")}</Label>
                   <VoiceRecorder
                     field="symptoms"
                     languageHint={language}
@@ -447,21 +445,19 @@ export function IntakePage() {
                   ref={symptomsRef}
                   required
                   rows={5}
-                  placeholder="Write in any language the health worker is comfortable with."
+                  placeholder={t(lang, "symptomsPlaceholder")}
                 />
                 {voiceFilled['symptoms'] ? (
-                  <p className="text-xs text-risk-amber">
-                    Transcribed from voice — please read it back and correct any misheard words before submitting.
-                  </p>
+                  <p className="text-xs text-risk-amber">{t(lang, "voiceCheck")}</p>
                 ) : null}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="duration">Duration of symptoms</Label>
-                <Input id="duration" name="duration" placeholder="e.g. 3 days" />
+                <Label htmlFor="duration">{t(lang, "durationLabel")}</Label>
+                <Input id="duration" name="duration" placeholder={t(lang, "durationPlaceholder")} />
               </div>
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <Label htmlFor="history">Basic medical history</Label>
+                  <Label htmlFor="history">{t(lang, "historyLabel")}</Label>
                   <VoiceRecorder
                     field="history"
                     languageHint={language}
@@ -473,12 +469,10 @@ export function IntakePage() {
                   name="history"
                   ref={historyRef}
                   rows={3}
-                  placeholder="Chronic conditions, medicines, allergies"
+                  placeholder={t(lang, "historyPlaceholder")}
                 />
                 {voiceFilled['history'] ? (
-                  <p className="text-xs text-risk-amber">
-                    Transcribed from voice — please read it back and correct any misheard words before submitting.
-                  </p>
+                  <p className="text-xs text-risk-amber">{t(lang, "voiceCheck")}</p>
                 ) : null}
               </div>
             </div>
@@ -487,22 +481,24 @@ export function IntakePage() {
           <ChronicConditionsSection form={conditions} />
 
           <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Vitals</h2>
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              {t(lang, "vitals")}
+            </h2>
             <div className="grid gap-4 sm:grid-cols-4">
               <div className="space-y-2">
-                <Label htmlFor="temp">Temperature (°C)</Label>
+                <Label htmlFor="temp">{t(lang, "temperature")}</Label>
                 <Input id="temp" name="temp" type="number" step="0.1" placeholder="37.0" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="bp">Blood pressure</Label>
+                <Label htmlFor="bp">{t(lang, "bloodPressure")}</Label>
                 <Input id="bp" name="bp" placeholder="120/80" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="pulse">Pulse (bpm)</Label>
+                <Label htmlFor="pulse">{t(lang, "pulse")}</Label>
                 <Input id="pulse" name="pulse" type="number" placeholder="80" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="spo2">SpO2 (%)</Label>
+                <Label htmlFor="spo2">{t(lang, "spo2")}</Label>
                 <Input id="spo2" name="spo2" type="number" placeholder="98" />
               </div>
             </div>
@@ -510,7 +506,7 @@ export function IntakePage() {
             {emergencyWarnings.length > 0 ? (
               <div role="alert" className="mt-4 rounded-xl border border-risk-red/30 bg-risk-red-soft p-4 text-sm text-risk-red">
                 <p className="flex items-center gap-2 font-bold">
-                  <AlertTriangle className="size-4" aria-hidden /> Emergency threshold triggered
+                  <AlertTriangle className="size-4" aria-hidden /> {t(lang, "emergencyThreshold")}
                 </p>
                 <ul className="mt-2 list-disc space-y-1 pl-5">
                   {emergencyWarnings.map((w) => (
@@ -522,30 +518,28 @@ export function IntakePage() {
 
             {verifyWarnings.length > 0 ? (
               <div role="alert" className="mt-4 rounded-xl border border-risk-amber/30 bg-risk-amber-soft p-4 text-sm text-risk-amber">
-                <p className="font-semibold">Please verify these measurements</p>
+                <p className="font-semibold">{t(lang, "verifyMeasurements")}</p>
                 <ul className="mt-2 list-disc space-y-1 pl-5">
                   {verifyWarnings.map((w) => (
                     <li key={w.field}>{w.message}</li>
                   ))}
                 </ul>
-                <p className="mt-2 text-xs">Values are never corrected automatically — re-check and re-enter.</p>
+                <p className="mt-2 text-xs">{t(lang, "verifyHelp")}</p>
               </div>
             ) : null}
           </section>
 
           <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Optional upload
+              {t(lang, "optionalUpload")}
             </h2>
             <label
               htmlFor="file"
               className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border px-6 py-10 text-center transition-colors hover:border-primary"
             >
               <ImageUp className="size-6 text-muted-foreground" aria-hidden />
-              <span className="text-sm font-medium">Upload wound photo or prescription</span>
-              <span className="text-xs text-muted-foreground">
-                Stored privately. Reviewed for observation or text extraction only — never a diagnosis.
-              </span>
+              <span className="text-sm font-medium">{t(lang, "uploadCta")}</span>
+              <span className="text-xs text-muted-foreground">{t(lang, "uploadHelp")}</span>
               <input
                 id="file"
                 type="file"
@@ -566,11 +560,9 @@ export function IntakePage() {
 
           <Button type="submit" size="lg" className="w-full" disabled={busy}>
             {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Sparkles className="size-4" aria-hidden />}
-            {online ? "Submit for AI Assessment" : "Save offline"}
+            {online ? t(lang, "submitAi") : t(lang, "saveOffline")}
           </Button>
-          <p className="pb-4 text-center text-xs text-muted-foreground">
-            AI-generated information is advisory only. It does not replace a qualified medical professional.
-          </p>
+          <p className="pb-4 text-center text-xs text-muted-foreground">{t(lang, "advisoryNote")}</p>
         </form>
       </div>
     </AppShell>
