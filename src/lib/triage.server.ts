@@ -546,7 +546,7 @@ export async function fetchDrugSafety(medicine: string): Promise<DrugSafety | nu
     const url = `https://api.fda.gov/drug/label.json?search=openfda.brand_name:"${encodeURIComponent(
       medicine,
     )}"&limit=1`;
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
     if (!res.ok) {
       return { medicine, source: "openFDA", note: "No OpenFDA label record found for this medicine." };
     }
