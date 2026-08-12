@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Loader2, Mic, MicOff, PhoneOff, Video, VideoOff, X } from "lucide-react";
 import { toast } from "sonner";
 
-import { RiskBadge } from "@/components/risk";
+import { RiskPill } from "@/components/risk";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -230,7 +230,7 @@ export function CallRoom({
                 {formatDateTime(visit.created_at)}
               </p>
             </div>
-            <RiskBadge tier={(visit.risk_tier ?? "YELLOW") as "RED" | "YELLOW" | "GREEN"} />
+            <RiskPill tier={visit.risk_tier} withLabel />
           </div>
 
           <div>
