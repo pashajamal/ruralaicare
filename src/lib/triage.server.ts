@@ -1,7 +1,7 @@
+import { geminiFetch } from "./gemini.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { hasCondition, type ChronicCondition, type PregnancyStatus } from "./conditions";
 
-const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-2.5-flash";
 
 type ContentBlock =
@@ -13,13 +13,7 @@ async function callGemini(
   system: string,
   jsonMode = false,
 ): Promise<string> {
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("Missing AI credentials");
-
-  const res = await fetch(GATEWAY, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
-    body: JSON.stringify({
+  const res = await geminiFetch("/chat/completions", ({
       model: MODEL,
       messages: [
         { role: "system", content: system },
