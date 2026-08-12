@@ -11,9 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DoctorRouteImport } from './routes/doctor'
+import { Route as FollowupsRouteImport } from './routes/followups'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as IntakeRouteImport } from './routes/intake'
 import { Route as QueueRouteImport } from './routes/queue'
+import { Route as ReferralsRouteImport } from './routes/referrals'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ReviewVisitIdRouteImport } from './routes/review.$visitId'
 
@@ -25,6 +28,16 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DoctorRoute = DoctorRouteImport.update({
+  id: '/doctor',
+  path: '/doctor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FollowupsRoute = FollowupsRouteImport.update({
+  id: '/followups',
+  path: '/followups',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HistoryRoute = HistoryRouteImport.update({
@@ -42,6 +55,11 @@ const QueueRoute = QueueRouteImport.update({
   path: '/queue',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReferralsRoute = ReferralsRouteImport.update({
+  id: '/referrals',
+  path: '/referrals',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -56,18 +74,24 @@ const ReviewVisitIdRoute = ReviewVisitIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/doctor': typeof DoctorRoute
+  '/followups': typeof FollowupsRoute
   '/history': typeof HistoryRoute
   '/intake': typeof IntakeRoute
   '/queue': typeof QueueRoute
+  '/referrals': typeof ReferralsRoute
   '/settings': typeof SettingsRoute
   '/review/$visitId': typeof ReviewVisitIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/doctor': typeof DoctorRoute
+  '/followups': typeof FollowupsRoute
   '/history': typeof HistoryRoute
   '/intake': typeof IntakeRoute
   '/queue': typeof QueueRoute
+  '/referrals': typeof ReferralsRoute
   '/settings': typeof SettingsRoute
   '/review/$visitId': typeof ReviewVisitIdRoute
 }
@@ -75,9 +99,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/doctor': typeof DoctorRoute
+  '/followups': typeof FollowupsRoute
   '/history': typeof HistoryRoute
   '/intake': typeof IntakeRoute
   '/queue': typeof QueueRoute
+  '/referrals': typeof ReferralsRoute
   '/settings': typeof SettingsRoute
   '/review/$visitId': typeof ReviewVisitIdRoute
 }
@@ -86,27 +113,36 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/doctor'
+    | '/followups'
     | '/history'
     | '/intake'
     | '/queue'
+    | '/referrals'
     | '/settings'
     | '/review/$visitId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/doctor'
+    | '/followups'
     | '/history'
     | '/intake'
     | '/queue'
+    | '/referrals'
     | '/settings'
     | '/review/$visitId'
   id:
     | '__root__'
     | '/'
     | '/auth'
+    | '/doctor'
+    | '/followups'
     | '/history'
     | '/intake'
     | '/queue'
+    | '/referrals'
     | '/settings'
     | '/review/$visitId'
   fileRoutesById: FileRoutesById
@@ -114,9 +150,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  DoctorRoute: typeof DoctorRoute
+  FollowupsRoute: typeof FollowupsRoute
   HistoryRoute: typeof HistoryRoute
   IntakeRoute: typeof IntakeRoute
   QueueRoute: typeof QueueRoute
+  ReferralsRoute: typeof ReferralsRoute
   SettingsRoute: typeof SettingsRoute
   ReviewVisitIdRoute: typeof ReviewVisitIdRoute
 }
@@ -135,6 +174,20 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/doctor': {
+      id: '/doctor'
+      path: '/doctor'
+      fullPath: '/doctor'
+      preLoaderRoute: typeof DoctorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/followups': {
+      id: '/followups'
+      path: '/followups'
+      fullPath: '/followups'
+      preLoaderRoute: typeof FollowupsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/history': {
@@ -158,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QueueRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/referrals': {
+      id: '/referrals'
+      path: '/referrals'
+      fullPath: '/referrals'
+      preLoaderRoute: typeof ReferralsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -178,9 +238,12 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  DoctorRoute: DoctorRoute,
+  FollowupsRoute: FollowupsRoute,
   HistoryRoute: HistoryRoute,
   IntakeRoute: IntakeRoute,
   QueueRoute: QueueRoute,
+  ReferralsRoute: ReferralsRoute,
   SettingsRoute: SettingsRoute,
   ReviewVisitIdRoute: ReviewVisitIdRoute,
 }
