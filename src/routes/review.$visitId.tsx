@@ -342,6 +342,11 @@ function ReviewPage() {
   const structured = (visit.structured_summary ?? null) as Record<string, unknown> | null;
   const drug = (visit.drug_safety_info ?? null) as { medicine?: string; warnings?: string[] } | null;
   const isRed = tier === "RED";
+  const conditionData = (visit.chronic_conditions ?? null) as
+    | { conditions?: Array<{ condition_name: string }>; alerts?: Array<{ condition: string; note: string }>; guardrails?: string[] }
+    | null;
+  const historyAlerts = conditionData?.alerts ?? [];
+  const pregnancy = (visit.pregnancy_status ?? null) as PregnancyStatus | null;
 
   return (
     <AppShell>
@@ -359,6 +364,7 @@ function ReviewPage() {
               )}
               <span className="ml-2 text-base font-normal text-muted-foreground">{patient?.age} yrs</span>
             </h1>
+            <ConditionBadges patientId={patient?.id} pregnancy={pregnancy} className="mt-2" />
             <p className="mt-1 text-xs text-muted-foreground">
               Visit ID {visit.id.slice(0, 8)} · {formatDateTime(visit.created_at)} · Status{" "}
               <b>{STATUS_LABEL[visit.status] ?? visit.status}</b>
@@ -564,6 +570,24 @@ function ReviewPage() {
               <p className="text-xs font-semibold uppercase tracking-wide text-risk-amber">Preliminary assessment</p>
               <p className="mt-1 whitespace-pre-wrap text-sm">{visit.preliminary_assessment ?? "AI assessment unavailable."}</p>
             </div>
+
+            {historyAlerts.length > 0 ? (
+              <div className="mt-4 rounded-xl border border-risk-amber/30 bg-card p-4">
+                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-risk-amber">
+                  <Flag className="size-3.5" aria-hidden /> Relevant medical history alerts
+                </p>
+                <ul className="mt-2 space-y-2 text-sm">
+                  {historyAlerts.map((a) => (
+                    <li key={a.condition}>
+                      <b>{a.condition}</b> — {a.note}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Context only, not a directive — the doctor's judgment decides how this affects care.
+                </p>
+              </div>
+            ) : null}
 
             {visit.confirmation_message ? (
               <p className="mt-4 rounded-xl bg-card p-3 text-sm" lang="und">
