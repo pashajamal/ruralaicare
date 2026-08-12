@@ -4,11 +4,13 @@ import { useMemo, useState } from "react";
 import { Loader2, Search } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
+import { ConditionBadges } from "@/components/ConditionBadges";
 import { RiskPill } from "@/components/risk";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { STATUS_LABEL, formatDateTime } from "@/lib/clinic";
+import type { PregnancyStatus } from "@/lib/conditions";
 
 export const Route = createFileRoute("/history")({
   head: () => ({
