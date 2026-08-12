@@ -56,3 +56,26 @@ export function MedicineBadge({ medicine }: { medicine: string }) {
     </Link>
   );
 }
+
+/** Scans free text (e.g. a first-aid protocol) for medicines and shows their live availability. */
+export function MedicineMentions({ text }: { text: string }) {
+  const { data } = useMedicineInventory();
+  if (!data) return null;
+  const lower = text.toLowerCase();
+  const mentioned = data.filter((r) => {
+    const base = r.medicine_name.toLowerCase().replace(/\s*\d+\s*(mg|ml|g)\b.*/i, "").trim();
+    return base.length > 3 && lower.includes(base);
+  });
+  if (mentioned.length === 0) return null;
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-1 text-xs">
+      <span className="text-muted-foreground">Availability:</span>
+      {mentioned.map((m) => (
+        <span key={m.id} className="inline-flex items-center">
+          <b className="font-medium">{m.medicine_name}</b>
+          <MedicineBadge medicine={m.medicine_name} />
+        </span>
+      ))}
+    </div>
+  );
+}
