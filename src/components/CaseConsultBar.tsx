@@ -225,7 +225,9 @@ export function CaseConsultBar({ visitId, patientId, patientName, visitCentre, t
 
       {chatOpen ? <ChatPanel visitId={visitId} patientId={patientId} visitCentre={visitCentre} /> : null}
 
-      {call ? <CallScreen type={call.type} peer={isDoctor ? "Health worker" : "Doctor on call"} patientName={patientName} onEnd={endCall} /> : null}
+      {call && call.id && callVisit ? (
+        <CallRoom consultationId={call.id} visit={callVisit} mode={call.type} onClose={endCall} />
+      ) : null}
     </div>
   );
 }
