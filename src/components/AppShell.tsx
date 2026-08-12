@@ -26,6 +26,7 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 
 import { NotificationBell } from "@/components/NotificationBell";
+import clinicLogo from "@/assets/clinic-logo.jpg.asset.json";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -181,9 +182,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen bg-background">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-card md:flex">
         <div className="flex items-center gap-3 px-6 py-6">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Stethoscope className="size-5" aria-hidden />
-          </div>
+          <img
+            src={clinicLogo.url}
+            alt="AI Virtual Clinic logo"
+            className="size-10 shrink-0 rounded-xl object-contain"
+          />
           <div>
             <p className="text-sm font-semibold leading-tight">AI Virtual Clinic</p>
             <p className="text-xs text-muted-foreground">
@@ -231,7 +234,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <SheetContent side="left" className="w-72 p-0">
                 <SheetHeader className="px-5 py-4 text-left">
                   <SheetTitle className="flex items-center gap-2 text-sm">
-                    <Stethoscope className="size-5 text-primary" aria-hidden />
+                    <img src={clinicLogo.url} alt="" className="size-6 rounded-md object-contain" />
                     AI Virtual Clinic
                   </SheetTitle>
                 </SheetHeader>
@@ -262,7 +265,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 ) : null}
               </SheetContent>
             </Sheet>
-            <Stethoscope className="size-5 shrink-0 text-primary" aria-hidden />
+            <img src={clinicLogo.url} alt="" className="size-6 shrink-0 rounded-md object-contain" />
             <span className="truncate text-sm font-semibold">AI Virtual Clinic</span>
           </div>
           <div className="ml-auto flex items-center gap-3">
