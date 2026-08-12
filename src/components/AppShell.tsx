@@ -13,6 +13,7 @@ import {
   ListChecks,
   LogOut,
   MapPin,
+  Menu,
   Pill,
   Send,
   Settings,
@@ -24,6 +25,13 @@ import { useEffect, useState, type ReactNode } from "react";
 
 import { NotificationBell } from "@/components/NotificationBell";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { useAuth } from "@/lib/auth";
 import { t } from "@/lib/i18n";
 import { readPending } from "@/lib/offline";
@@ -85,6 +93,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { loading, session, profile, role, isDoctor, signOut } = useAuth();
   const navigate = useNavigate();
   const { online, pending } = useOnline();
+  const [mobileOpen, setMobileOpen] = useState(false);
   const lang = profile?.ui_language ?? "English";
   const nav = isDoctor ? DOCTOR_NAV : WORKER_NAV;
 
@@ -143,9 +152,61 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-card px-4 py-3 md:px-6">
-          <div className="flex items-center gap-2 md:hidden">
-            <Stethoscope className="size-5 text-primary" aria-hidden />
-            <span className="text-sm font-semibold">AI Virtual Clinic</span>
+          <div className="flex min-w-0 items-center gap-2 md:hidden">
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="shrink-0" aria-label="Open menu">
+                  <Menu className="size-5" aria-hidden />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-72 p-0">
+                <SheetHeader className="px-5 py-4 text-left">
+                  <SheetTitle className="flex items-center gap-2 text-sm">
+                    <Stethoscope className="size-5 text-primary" aria-hidden />
+                    AI Virtual Clinic
+                  </SheetTitle>
+                </SheetHeader>
+                <nav aria-label="Mobile" className="flex flex-col gap-1 overflow-y-auto px-3 pb-4">
+                  {nav.map(({ to, key, icon: Icon }) => (
+                    <Link
+                      key={to}
+                      to={to}
+                      activeOptions={{ exact: to === "/" }}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                      activeProps={{ className: "bg-accent text-accent-foreground" }}
+                    >
+                      <Icon className="size-4 shrink-0" aria-hidden />
+                      {t(lang, key)}
+                    </Link>
+                  ))}
+                </nav>
+                {session ? (
+                  <div className="border-t border-border px-4 py-4">
+                    <p className="truncate text-sm font-medium">
+                      {profile?.full_name || session.user.email}
+                    </p>
+                    <p className="truncate text-xs capitalize text-muted-foreground">
+                      {(role ?? "staff").replace("_", " ")} · {profile?.health_centre}
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-2 w-full justify-start px-2"
+                      onClick={async () => {
+                        setMobileOpen(false);
+                        await signOut();
+                        void navigate({ to: "/auth" });
+                      }}
+                    >
+                      <LogOut className="size-4" aria-hidden /> {t(lang, "signOut")}
+                    </Button>
+                  </div>
+                ) : null}
+              </SheetContent>
+            </Sheet>
+            <Stethoscope className="size-5 shrink-0 text-primary" aria-hidden />
+            <span className="truncate text-sm font-semibold">AI Virtual Clinic</span>
           </div>
           <div className="ml-auto flex items-center gap-3">
             {!online ? (
