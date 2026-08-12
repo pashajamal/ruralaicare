@@ -235,6 +235,27 @@ function SettingsPage() {
             </div>
           </dl>
         </section>
+
+        <section className="rounded-2xl border border-dashed border-border bg-card p-6 shadow-sm">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Coming soon</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Planned for future releases — not available in this version.
+          </p>
+          <ul className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+            {[
+              "Voice input and spoken replies, with full multilingual speech round-trip",
+              "Real offline-first sync queue beyond the current local-storage capture",
+              "SMS and push delivery for follow-up reminders",
+              "Real-time doctor video and audio consultation",
+              "Integration with live hospital availability and bed-status data",
+              "Multi-clinic and multi-region administrator view",
+            ].map((item) => (
+              <li key={item} className="rounded-xl border border-border bg-secondary px-3 py-2 text-muted-foreground">
+                {item}
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
     </AppShell>
   );
