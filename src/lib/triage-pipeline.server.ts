@@ -211,33 +211,73 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
   }
 
   // 3. Deterministic risk scoring — pure code, always runs, even if the AI failed
-  const risk = scoreRisk(structured, input.symptoms);
+  const baseRisk = scoreRisk(structured, input.symptoms);
+  // 3b. Condition-aware modifiers (chronic conditions / pregnancy) — deterministic, can only escalate
+  const risk = applyConditionModifiers(
+    baseRisk,
+    conditionCtx,
+    `${input.symptoms} ${structured.symptoms.join(" ")} ${input.history}`,
+  );
 
   // 4 + 5. GREEN only: fixed protocol lookup + OpenFDA drug safety. RED hard-stops.
   let protocolText: string | null = null;
   let drugSafety: DrugSafety | null = null;
   let ayurvedic: { condition_name: string; remedy_text: string; source_reference: string | null } | null = null;
+  let guardrailNotes: string[] = [];
   if (risk.tier === "GREEN") {
     try {
       const protocol = await lookupProtocol(structured, input.symptoms);
       if (protocol) {
         protocolText = `${protocol.condition_name}\n\n${protocol.protocol_text}`;
-        if (protocol.otc_medicine) drugSafety = await fetchDrugSafety(protocol.otc_medicine);
+        if (protocol.otc_medicine) {
+          drugSafety = await fetchDrugSafety(protocol.otc_medicine);
+          // Guardrail: cross-check the label text against the patient's flagged conditions.
+          const labelText = [
+            protocol.otc_medicine,
+            drugSafety?.contraindications,
+            drugSafety?.warnings,
+            drugSafety?.pediatric_use,
+            drugSafety?.geriatric_use,
+          ]
+            .filter(Boolean)
+            .join(" ");
+          const caution = suggestionGuardrail(labelText, conditionCtx);
+          if (caution) {
+            drugSafety = { medicine: protocol.otc_medicine, source: "openFDA", note: caution };
+            guardrailNotes.push(caution);
+          }
+        }
       }
     } catch (error) {
       console.error("protocol/drug lookup failed", error);
     }
     try {
       ayurvedic = await lookupAyurvedic(structured, input.symptoms);
+      if (ayurvedic) {
+        const caution = suggestionGuardrail(`${ayurvedic.condition_name} ${ayurvedic.remedy_text}`, conditionCtx);
+        if (caution) {
+          ayurvedic = { condition_name: ayurvedic.condition_name, remedy_text: caution, source_reference: null };
+          guardrailNotes.push(caution);
+        }
+      }
     } catch (error) {
       console.error("ayurvedic lookup failed", error);
     }
+  }
+
+  // 5b. Cautious, non-directive context notes for the doctor about relevant history.
+  let alerts: Array<{ condition: string; note: string }> = [];
+  try {
+    alerts = await historyAlerts(conditionCtx, `${input.symptoms} ${input.history}`, risk.rules);
+  } catch (error) {
+    console.error("history alerts failed", error);
   }
 
   await supabaseAdmin
     .from("visits")
     .update({
       structured_summary: structured as unknown as Json,
+      chronic_conditions: { conditions: chronic, alerts, guardrails: guardrailNotes } as unknown as Json,
       preliminary_assessment:
         assessment ??
         "AI assessment unavailable. Risk classification is based on predefined safety rules and requires professional review.",
