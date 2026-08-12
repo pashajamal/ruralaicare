@@ -1,4 +1,4 @@
-import { Sparkles, Stethoscope } from "lucide-react";
+import { Stethoscope } from "lucide-react";
 
 import { formatDateTime } from "@/lib/clinic";
 
@@ -28,18 +28,6 @@ const DECISION_LABEL: Record<string, string> = {
 
 /** Side-by-side record of exactly what the AI suggested versus what the doctor decided. */
 export function DecisionAudit({ visit }: { visit: VisitRow }) {
-  const aiPayload = {
-    ai_status: visit.ai_status,
-    risk_tier: visit.risk_tier,
-    risk_tier_source: "deterministic_rules",
-    triggering_rules: visit.triggering_rules ?? [],
-    structured_summary: visit.structured_summary ?? null,
-    preliminary_assessment: visit.preliminary_assessment,
-    protocol_text: visit.protocol_text,
-    drug_safety_info: visit.drug_safety_info ?? null,
-    image_analysis: visit.image_analysis,
-  };
-
   return (
     <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
@@ -50,17 +38,7 @@ export function DecisionAudit({ visit }: { visit: VisitRow }) {
         confused for one another.
       </p>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-risk-amber/30 bg-risk-amber-soft p-4">
-          <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-risk-amber">
-            <Sparkles className="size-4" aria-hidden /> Original AI suggestion (JSON)
-          </h3>
-          <p className="mt-1 text-xs text-risk-amber">Recorded {formatDateTime(visit.created_at)} · never edited</p>
-          <pre className="mt-3 max-h-80 overflow-auto rounded-lg bg-card p-3 text-xs leading-relaxed">
-            <code>{JSON.stringify(aiPayload, null, 2)}</code>
-          </pre>
-        </div>
-
+      <div className="mt-4">
         <div className="rounded-xl border border-risk-green/30 bg-risk-green-soft p-4">
           <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-risk-green">
             <Stethoscope className="size-4" aria-hidden /> Doctor decision
