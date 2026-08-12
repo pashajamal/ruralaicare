@@ -347,6 +347,16 @@ function ReviewPage() {
   const structured = (visit.structured_summary ?? null) as Record<string, unknown> | null;
   const drug = (visit.drug_safety_info ?? null) as { medicine?: string; warnings?: string[] } | null;
   const isRed = tier === "RED";
+  const medSuggestion = (visit.medicine_suggestion ?? null) as {
+    status?: string;
+    message?: string;
+    condition?: string;
+    medicines?: Array<{ name: string; detail?: string; informational?: boolean; reason?: string }>;
+    reference?: { id: string; content: string; similarity: number };
+    override_reason?: string;
+  } | null;
+  const actionableMeds = (medSuggestion?.medicines ?? []).filter((m) => !m.informational);
+  const infoMeds = (medSuggestion?.medicines ?? []).filter((m) => m.informational);
   const conditionData = (visit.chronic_conditions ?? null) as
     | { conditions?: Array<{ condition_name: string }>; alerts?: Array<{ condition: string; note: string }>; guardrails?: string[] }
     | null;
@@ -685,6 +695,90 @@ function ReviewPage() {
                   ))}
                 </ul>
                 <p className="mt-2 text-xs text-muted-foreground">Source: openFDA drug label data.</p>
+              </div>
+            ) : null}
+
+            {/* Suggested medicines — retrieval-only, gated by the deterministic risk tier */}
+            {tier === "YELLOW" ? (
+              <div className="mt-4 rounded-xl border border-risk-amber/30 bg-card p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-risk-amber">
+                  Doctor consultation recommended
+                </p>
+                <p className="mt-1 text-sm">
+                  No medicine is suggested for YELLOW cases — the presentation is uncertain enough that a doctor should
+                  decide.
+                </p>
+                {visit.preliminary_assessment ? (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Symptoms are reviewed against the reference dataset above; treatment remains the doctor's call.
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+
+            {tier === "GREEN" && medSuggestion ? (
+              <div className="mt-4 rounded-xl border border-border bg-card p-4">
+                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <Pill className="size-3.5" aria-hidden /> Suggested medicines
+                </p>
+
+                {medSuggestion.status === "suggested" ? (
+                  <>
+                    <p className="mt-2 text-sm font-semibold text-risk-green">
+                      Suggested (from reference database) — Pending Doctor Approval
+                    </p>
+                    {medSuggestion.condition ? (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Consistent with: <b>{medSuggestion.condition}</b>
+                      </p>
+                    ) : null}
+                    <ul className="mt-2 space-y-1.5 text-sm">
+                      {actionableMeds.map((m) => (
+                        <li key={m.name} className="flex flex-wrap items-center gap-1">
+                          <b>{m.name}</b>
+                          <MedicineBadge medicine={m.name} />
+                          {m.detail ? <span className="text-xs text-muted-foreground">— {m.detail}</span> : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <p
+                    className={`mt-2 text-sm font-semibold ${
+                      medSuggestion.status === "escalate" ? "text-risk-amber" : "text-muted-foreground"
+                    }`}
+                  >
+                    {medSuggestion.message}
+                  </p>
+                )}
+
+                {infoMeds.length > 0 ? (
+                  <div className="mt-3 rounded-lg border border-dashed border-border p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Informational only — not actionable by the health worker
+                    </p>
+                    <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+                      {infoMeds.map((m) => (
+                        <li key={m.name}>
+                          <b>{m.name}</b>
+                          {m.reason ? ` — ${m.reason}` : ""}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+
+                {medSuggestion.reference ? (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Reference: knowledge base entry {medSuggestion.reference.id.slice(0, 8)} ·{" "}
+                    {(medSuggestion.reference.similarity * 100).toFixed(0)}% match ·{" "}
+                    <span className="italic">{medSuggestion.reference.content.slice(0, 160)}</span>
+                  </p>
+                ) : null}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Retrieved from the clinic's reference database — never AI-generated, and never applied without the
+                  doctor's sign-off.
+                </p>
               </div>
             ) : null}
 
