@@ -826,6 +826,9 @@ export type Database = {
         Row: {
           ai_status: string
           assigned_doctor: string | null
+          ayurvedic_condition: string | null
+          ayurvedic_remedy: string | null
+          ayurvedic_source: string | null
           confirmation_message: string | null
           created_at: string
           created_by: string | null
@@ -856,6 +859,9 @@ export type Database = {
         Insert: {
           ai_status?: string
           assigned_doctor?: string | null
+          ayurvedic_condition?: string | null
+          ayurvedic_remedy?: string | null
+          ayurvedic_source?: string | null
           confirmation_message?: string | null
           created_at?: string
           created_by?: string | null
@@ -886,6 +892,9 @@ export type Database = {
         Update: {
           ai_status?: string
           assigned_doctor?: string | null
+          ayurvedic_condition?: string | null
+          ayurvedic_remedy?: string | null
+          ayurvedic_source?: string | null
           confirmation_message?: string | null
           created_at?: string
           created_by?: string | null
