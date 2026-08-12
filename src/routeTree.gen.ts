@@ -9,18 +9,13 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as HistoryRouteImport } from './routes/history'
+import { Route as IntakeRouteImport } from './routes/intake'
 import { Route as QueueRouteImport } from './routes/queue'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ReviewVisitIdRouteImport } from './routes/review.$visitId'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -29,6 +24,11 @@ const AuthRoute = AuthRouteImport.update({
 const HistoryRoute = HistoryRouteImport.update({
   id: '/history',
   path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntakeRoute = IntakeRouteImport.update({
+  id: '/intake',
+  path: '/intake',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QueueRoute = QueueRouteImport.update({
@@ -48,26 +48,26 @@ const ReviewVisitIdRoute = ReviewVisitIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/history': typeof HistoryRoute
+  '/intake': typeof IntakeRoute
   '/queue': typeof QueueRoute
   '/settings': typeof SettingsRoute
   '/review/$visitId': typeof ReviewVisitIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/history': typeof HistoryRoute
+  '/intake': typeof IntakeRoute
   '/queue': typeof QueueRoute
   '/settings': typeof SettingsRoute
   '/review/$visitId': typeof ReviewVisitIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/history': typeof HistoryRoute
+  '/intake': typeof IntakeRoute
   '/queue': typeof QueueRoute
   '/settings': typeof SettingsRoute
   '/review/$visitId': typeof ReviewVisitIdRoute
@@ -75,23 +75,34 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/auth' | '/history' | '/queue' | '/settings' | '/review/$visitId'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/history' | '/queue' | '/settings' | '/review/$visitId'
-  id:
-    | '__root__'
-    | '/'
     | '/auth'
     | '/history'
+    | '/intake'
+    | '/queue'
+    | '/settings'
+    | '/review/$visitId'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/auth'
+    | '/history'
+    | '/intake'
+    | '/queue'
+    | '/settings'
+    | '/review/$visitId'
+  id:
+    | '__root__'
+    | '/auth'
+    | '/history'
+    | '/intake'
     | '/queue'
     | '/settings'
     | '/review/$visitId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   HistoryRoute: typeof HistoryRoute
+  IntakeRoute: typeof IntakeRoute
   QueueRoute: typeof QueueRoute
   SettingsRoute: typeof SettingsRoute
   ReviewVisitIdRoute: typeof ReviewVisitIdRoute
@@ -99,13 +110,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -118,6 +122,13 @@ declare module '@tanstack/react-router' {
       path: '/history'
       fullPath: '/history'
       preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/intake': {
+      id: '/intake'
+      path: '/intake'
+      fullPath: '/intake'
+      preLoaderRoute: typeof IntakeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/queue': {
@@ -145,9 +156,9 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   HistoryRoute: HistoryRoute,
+  IntakeRoute: IntakeRoute,
   QueueRoute: QueueRoute,
   SettingsRoute: SettingsRoute,
   ReviewVisitIdRoute: ReviewVisitIdRoute,

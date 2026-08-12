@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
 const IntakeSchema = z.object({
@@ -18,8 +19,9 @@ const IntakeSchema = z.object({
 });
 
 export const submitIntake = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => IntakeSchema.parse(input))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { runIntakePipeline } = await import("./triage-pipeline.server");
-    return runIntakePipeline(data);
+    return runIntakePipeline(data, context.userId);
   });
