@@ -43,7 +43,7 @@ function MyCasesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("visits")
-        .select("id, risk_tier, status, created_at, doctor_decision, doctor_notes, patients(name, age)")
+        .select("id, risk_tier, status, created_at, doctor_decision, doctor_notes, patients(id, name, age, mobile_number)")
         .eq("created_by", userId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -53,11 +53,21 @@ function MyCasesPage() {
 
   const rows = useMemo(() => {
     const term = search.trim().toLowerCase();
+    const digits = term.replace(/\D/g, "");
     return (data ?? []).filter((v) => {
-      const p = v.patients as { name?: string } | null;
-      return !term || (p?.name ?? "").toLowerCase().includes(term);
+      const p = v.patients as { name?: string; mobile_number?: string | null } | null;
+      const phone = (p?.mobile_number ?? "").replace(/\D/g, "");
+      const matches =
+        !term ||
+        (p?.name ?? "").toLowerCase().includes(term) ||
+        (digits.length >= 3 && phone.includes(digits));
+      if (!matches) return false;
+      if (filter === "Pending") return v.status !== "finalized";
+      if (filter === "Finalized") return v.status === "finalized";
+      if (filter !== "All") return v.risk_tier === filter.toUpperCase();
+      return true;
     });
-  }, [data, search]);
+  }, [data, search, filter]);
 
   return (
     <AppShell>
