@@ -6,6 +6,7 @@ import { FileSpreadsheet, ImagePlus, Loader2, ScanText } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
+import { SymptomDatasetPanel } from "@/components/SymptomDatasetPanel";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { processPrescriptionsFn, uploadPrescriptionImageFn } from "@/lib/prescriptions.functions";
