@@ -1,13 +1,15 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, Loader2, MessageSquare, Mic, MicOff, Phone, PhoneOff, Send, Video, X } from "lucide-react";
+import { AlertTriangle, Loader2, MessageSquare, Phone, Radio, Send, Video } from "lucide-react";
 import { toast } from "sonner";
 
+import { CallRoom, type CallVisit } from "@/components/CallRoom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { formatDateTime, logAudit, notify } from "@/lib/clinic";
+import { useClinicPresence } from "@/lib/presence";
 
 type ConsultType = "chat" | "audio" | "video";
 
@@ -17,6 +19,7 @@ type Props = {
   patientName: string;
   visitCentre: string;
   tier: string;
+  callVisit?: CallVisit;
 };
 
 type Message = {
@@ -28,12 +31,13 @@ type Message = {
   created_at: string;
 };
 
-export function CaseConsultBar({ visitId, patientId, patientName, visitCentre, tier }: Props) {
+export function CaseConsultBar({ visitId, patientId, patientName, visitCentre, tier, callVisit }: Props) {
   const { profile, role, isDoctor, session } = useAuth();
   const qc = useQueryClient();
+  const { doctorOnline, doctors } = useClinicPresence();
   const [chatOpen, setChatOpen] = useState(false);
   const [call, setCall] = useState<{ type: "audio" | "video"; id: string | null } | null>(null);
-  const [starting, setStarting] = useState<ConsultType | "urgent" | null>(null);
+  const [starting, setStarting] = useState<ConsultType | "urgent" | "request" | null>(null);
 
   const actor = {
     id: profile?.id,
@@ -133,6 +137,27 @@ export function CaseConsultBar({ visitId, patientId, patientName, visitCentre, t
     toast.success("Urgent consult raised — pinned to the top of the doctor's review queue");
   }
 
+  /** Escalation only: puts the case in the live consultation queue without leaving the async flow. */
+  async function onRequestLive() {
+    setStarting("request");
+    const id = await startConsultation(tier === "RED" ? "video" : "video", tier === "RED");
+    setStarting(null);
+    if (!id) return;
+    await notify({
+      audience: isDoctor ? "health_worker" : "doctor",
+      title: "Live consultation requested",
+      body: `${patientName} · ${tier} tier — ${profile?.full_name ?? "Clinic staff"}`,
+      kind: "consultation",
+      visitId,
+      healthCentre: profile?.health_centre ?? visitCentre,
+    });
+    toast.success(
+      doctorOnline
+        ? "Live consultation requested — it's now in the consultation queue"
+        : "Doctor offline — request queued; the case stays in async review",
+    );
+  }
+
   async function endCall() {
     if (call?.id) {
       await supabase
@@ -148,6 +173,10 @@ export function CaseConsultBar({ visitId, patientId, patientName, visitCentre, t
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
+        <Button size="sm" onClick={onRequestLive} disabled={starting === "request"}>
+          {starting === "request" ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Video className="size-4" aria-hidden />}
+          Request Live Consultation
+        </Button>
         <Button size="sm" variant={chatOpen ? "default" : "outline"} onClick={onChat} disabled={starting === "chat"}>
           {starting === "chat" ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <MessageSquare className="size-4" aria-hidden />}
           Chat
@@ -177,6 +206,16 @@ export function CaseConsultBar({ visitId, patientId, patientName, visitCentre, t
         ) : null}
       </div>
 
+      <p
+        className={`flex items-center gap-2 text-xs font-medium ${doctorOnline ? "text-risk-green" : "text-risk-amber"}`}
+        aria-live="polite"
+      >
+        <Radio className="size-3.5" aria-hidden />
+        {doctorOnline
+          ? `Doctor online (${doctors.length}) — a live call can connect now`
+          : "Doctor offline — case remains in async review queue"}
+      </p>
+
       {urgent ? (
         <p className="flex items-center gap-2 rounded-xl border border-risk-red/30 bg-risk-red-soft px-3 py-2 text-xs font-semibold text-risk-red">
           <span className="inline-block size-2 animate-pulse rounded-full bg-risk-red" aria-hidden />
@@ -186,7 +225,9 @@ export function CaseConsultBar({ visitId, patientId, patientName, visitCentre, t
 
       {chatOpen ? <ChatPanel visitId={visitId} patientId={patientId} visitCentre={visitCentre} /> : null}
 
-      {call ? <CallScreen type={call.type} peer={isDoctor ? "Health worker" : "Doctor on call"} patientName={patientName} onEnd={endCall} /> : null}
+      {call && call.id && callVisit ? (
+        <CallRoom consultationId={call.id} visit={callVisit} mode={call.type} onClose={endCall} />
+      ) : null}
     </div>
   );
 }
@@ -309,85 +350,6 @@ function ChatPanel({ visitId, patientId, visitCentre }: { visitId: string; patie
       <p className="mt-2 text-xs text-muted-foreground">
         Messages are stored on the visit record and visible to the assigned doctor and the submitting health worker.
       </p>
-    </div>
-  );
-}
-
-function CallScreen({
-  type,
-  peer,
-  patientName,
-  onEnd,
-}: {
-  type: "audio" | "video";
-  peer: string;
-  patientName: string;
-  onEnd: () => void;
-}) {
-  const [connected, setConnected] = useState(false);
-  const [seconds, setSeconds] = useState(0);
-  const [muted, setMuted] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setConnected(true), 2000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (!connected) return;
-    const id = setInterval(() => setSeconds((s) => s + 1), 1000);
-    return () => clearInterval(id);
-  }, [connected]);
-
-  const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
-  const ss = String(seconds % 60).padStart(2, "0");
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/60 p-4" role="dialog" aria-modal="true">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 text-center shadow-lg">
-        <div className="flex items-start justify-between">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {type === "video" ? "Video consultation" : "Audio consultation"}
-          </p>
-          <button onClick={onEnd} aria-label="Close call window" className="text-muted-foreground hover:text-foreground">
-            <X className="size-4" aria-hidden />
-          </button>
-        </div>
-
-        <div className="mx-auto mt-5 flex size-24 items-center justify-center rounded-full bg-secondary">
-          {type === "video" ? <Video className="size-10 text-primary" aria-hidden /> : <Phone className="size-10 text-primary" aria-hidden />}
-        </div>
-
-        <p className="mt-4 text-lg font-semibold">{peer}</p>
-        <p className="text-sm text-muted-foreground">Case: {patientName}</p>
-
-        <p className="mt-3 text-sm font-medium" aria-live="polite">
-          {connected ? (
-            <span className="tabular-nums text-risk-green">
-              Connected · {mm}:{ss}
-            </span>
-          ) : (
-            <span className="flex items-center justify-center gap-2 text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" aria-hidden /> Connecting…
-            </span>
-          )}
-        </p>
-
-        <div className="mt-6 flex items-center justify-center gap-3">
-          <Button variant="outline" size="lg" onClick={() => setMuted((m) => !m)} disabled={!connected}>
-            {muted ? <MicOff className="size-4" aria-hidden /> : <Mic className="size-4" aria-hidden />}
-            {muted ? "Unmute" : "Mute"}
-          </Button>
-          <Button variant="destructive" size="lg" onClick={onEnd}>
-            <PhoneOff className="size-4" aria-hidden /> End call
-          </Button>
-        </div>
-
-        <p className="mt-4 text-xs text-muted-foreground">
-          Live audio/video streaming is not yet enabled in this deployment — the session is recorded in the
-          consultation log so the clinical trail stays complete.
-        </p>
-      </div>
     </div>
   );
 }
