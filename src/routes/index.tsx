@@ -1,223 +1,233 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { useState, type FormEvent } from "react";
-import { ImageUp, Loader2, Sparkles, X } from "lucide-react";
-import { toast } from "sonner";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { Activity, AlertTriangle, CalendarClock, ClipboardPlus, Send, ShieldCheck, Stethoscope } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
+import { RiskPill } from "@/components/risk";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { submitIntake } from "@/lib/triage.functions";
+import { useAuth } from "@/lib/auth";
+import { formatDateTime, STATUS_LABEL, TIER_ORDER, waitingSince } from "@/lib/clinic";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "New Patient Intake | AI Virtual Clinic" },
+      { title: "Clinic Dashboard | AI Virtual Clinic" },
       {
         name: "description",
         content:
-          "Record patient symptoms and vitals, run an AI-assisted risk triage, and route the case to a doctor for review.",
+          "Safety-first rural clinic dashboard: deterministic risk triage, doctor-approved decisions, referrals and follow-ups in one place.",
       },
-      { property: "og:title", content: "New Patient Intake | AI Virtual Clinic" },
+      { property: "og:title", content: "Clinic Dashboard | AI Virtual Clinic" },
       {
         property: "og:description",
-        content:
-          "Record patient symptoms and vitals, run an AI-assisted risk triage, and route the case to a doctor for review.",
+        content: "AI assists triage; a doctor makes every clinical decision.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: IntakePage,
+  component: DashboardPage,
 });
 
-const LANGUAGES = ["English", "Hindi", "Bangla", "Arabic"];
+function DashboardPage() {
+  const { profile, isDoctor } = useAuth();
 
-function IntakePage() {
-  const navigate = useNavigate();
-  const run = useServerFn(submitIntake);
-  const [language, setLanguage] = useState("English");
-  const [file, setFile] = useState<File | null>(null);
-  const [busy, setBusy] = useState(false);
+  const { data } = useQuery({
+    queryKey: ["dashboard"],
+    queryFn: async () => {
+      const [visits, referrals, followups, decisions] = await Promise.all([
+        supabase
+          .from("visits")
+          .select("id, risk_tier, status, created_at, emergency_acknowledged, patients(name, age)")
+          .order("created_at", { ascending: false })
+          .limit(200),
+        supabase.from("referrals").select("id, status"),
+        supabase.from("follow_ups").select("id, status, due_date"),
+        supabase.from("visits").select("doctor_decision").eq("status", "finalized"),
+      ]);
+      if (visits.error) throw visits.error;
+      return {
+        visits: visits.data ?? [],
+        referrals: referrals.data ?? [],
+        followups: followups.data ?? [],
+        decisions: decisions.data ?? [],
+      };
+    },
+  });
 
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const num = (key: string) => {
-      const raw = String(form.get(key) ?? "").trim();
-      const value = Number(raw);
-      return raw && Number.isFinite(value) ? value : null;
-    };
+  const visits = data?.visits ?? [];
+  const pending = visits.filter((v) => v.status !== "finalized");
+  const red = pending.filter((v) => v.risk_tier === "RED");
+  const finalized = data?.decisions ?? [];
+  const approved = finalized.filter((d) => d.doctor_decision === "approve").length;
+  const agreement = finalized.length > 0 ? Math.round((approved / finalized.length) * 100) : null;
+  const openReferrals = (data?.referrals ?? []).filter((r) => r.status !== "completed").length;
+  const openFollowups = (data?.followups ?? []).filter((f) => f.status !== "completed").length;
 
-    setBusy(true);
-    try {
-      let imagePath: string | null = null;
-      if (file) {
-        const path = `${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
-        const { error } = await supabase.storage.from("clinic-uploads").upload(path, file);
-        if (error) throw new Error("Image upload failed");
-        imagePath = path;
-      }
-
-      const result = await run({
-        data: {
-          name: String(form.get("name") ?? ""),
-          age: Number(form.get("age") ?? 0),
-          preferred_language: language,
-          symptoms: String(form.get("symptoms") ?? ""),
-          duration: String(form.get("duration") ?? ""),
-          history: String(form.get("history") ?? ""),
-          vitals: {
-            temp: num("temp"),
-            bp: String(form.get("bp") ?? "").trim() || null,
-            pulse: num("pulse"),
-            spo2: num("spo2"),
-          },
-          image_path: imagePath,
-        },
-      });
-
-      toast.success("Assessment ready for doctor review");
-      navigate({ to: "/review/$visitId", params: { visitId: result.visitId } });
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not submit intake");
-    } finally {
-      setBusy(false);
-    }
-  }
+  const urgent = [...pending]
+    .sort((a, b) => {
+      const t = (TIER_ORDER[a.risk_tier ?? "GREEN"] ?? 3) - (TIER_ORDER[b.risk_tier ?? "GREEN"] ?? 3);
+      return t !== 0 ? t : new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    })
+    .slice(0, 6);
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-4xl">
-        <header className="mb-6">
-          <h1 className="text-2xl font-semibold tracking-tight">New Patient Intake</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Record what the patient reports. The AI drafts an assessment; a doctor decides.
-          </p>
+      <div className="mx-auto max-w-6xl space-y-6">
+        <header className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {isDoctor ? "Doctor dashboard" : "Health worker dashboard"}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {profile?.health_centre ?? "Clinic"} · {profile?.full_name}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            {!isDoctor ? (
+              <Button asChild>
+                <Link to="/intake">
+                  <ClipboardPlus className="size-4" aria-hidden /> New intake
+                </Link>
+              </Button>
+            ) : null}
+            <Button asChild variant="outline">
+              <Link to="/doctor">
+                <Stethoscope className="size-4" aria-hidden /> Doctor workspace
+              </Link>
+            </Button>
+          </div>
         </header>
 
-        <form onSubmit={onSubmit} className="space-y-5">
-          <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Patient details
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-2 sm:col-span-1">
-                <Label htmlFor="name">Patient name</Label>
-                <Input id="name" name="name" required placeholder="Full name" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="age">Age</Label>
-                <Input id="age" name="age" type="number" min={0} max={120} required placeholder="Years" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="language">Preferred language</Label>
-                <Select value={language} onValueChange={setLanguage}>
-                  <SelectTrigger id="language">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LANGUAGES.map((l) => (
-                      <SelectItem key={l} value={l}>
-                        {l}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+        {red.length > 0 ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-risk-red/30 bg-risk-red-soft p-5 text-risk-red shadow-sm">
+            <p className="flex items-center gap-2 text-sm font-bold">
+              <AlertTriangle className="size-5" aria-hidden />
+              {red.length} emergency case{red.length > 1 ? "s" : ""} awaiting immediate doctor attention
+            </p>
+            <Button asChild size="sm" variant="destructive">
+              <Link to="/doctor">Open emergency queue</Link>
+            </Button>
+          </div>
+        ) : null}
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard label="Awaiting doctor review" value={pending.length} icon={Activity} />
+          <StatCard label="Emergency (RED) open" value={red.length} icon={AlertTriangle} tone="red" />
+          <StatCard label="Open referrals" value={openReferrals} icon={Send} />
+          <StatCard label="Open follow-ups" value={openFollowups} icon={CalendarClock} />
+        </div>
+
+        <div className="grid gap-5 lg:grid-cols-3">
+          <section className="rounded-2xl border border-border bg-card p-5 shadow-sm lg:col-span-2">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Urgency-sorted queue
+              </h2>
+              <Link to="/queue" className="text-xs font-semibold text-primary underline-offset-4 hover:underline">
+                View all
+              </Link>
+            </div>
+            <ul className="divide-y divide-border">
+              {urgent.length === 0 ? (
+                <li className="py-6 text-sm text-muted-foreground">No cases waiting for review.</li>
+              ) : (
+                urgent.map((v, index) => {
+                  const patient = v.patients as { name?: string; age?: number } | null;
+                  return (
+                    <li key={v.id} className="flex flex-wrap items-center gap-3 py-3">
+                      <span className="w-8 text-xs font-bold text-muted-foreground">#{index + 1}</span>
+                      <RiskPill tier={v.risk_tier} />
+                      <span className="font-medium">{patient?.name ?? "—"}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {patient?.age ?? "—"} yrs · waiting {waitingSince(v.created_at)}
+                      </span>
+                      <span className="ml-auto text-xs text-muted-foreground">{STATUS_LABEL[v.status] ?? v.status}</span>
+                      <Button asChild size="sm" variant="outline">
+                        <Link to="/review/$visitId" params={{ visitId: v.id }}>
+                          Open
+                        </Link>
+                      </Button>
+                    </li>
+                  );
+                })
+              )}
+            </ul>
+          </section>
+
+          <section className="space-y-5">
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                AI–Doctor agreement
+              </h2>
+              <p className="mt-3 text-4xl font-semibold tabular-nums">{agreement === null ? "—" : `${agreement}%`}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {finalized.length} finalized case{finalized.length === 1 ? "" : "s"} · {approved} approved without change
+              </p>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Measures how often doctors accept the AI draft unchanged. Overrides are expected and healthy.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-secondary p-5">
+              <p className="flex items-center gap-2 text-sm font-semibold">
+                <ShieldCheck className="size-4 text-primary" aria-hidden /> Safety model
+              </p>
+              <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
+                <li>Risk tier is calculated by deterministic clinical rules, never by the AI.</li>
+                <li>The AI drafts a cautious summary only — it can never override an emergency rule.</li>
+                <li>No case is finalized until a doctor completes the safety gate and signs off.</li>
+              </ul>
             </div>
           </section>
+        </div>
 
-          <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Presentation
-            </h2>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="symptoms">Symptoms description</Label>
-                <Textarea
-                  id="symptoms"
-                  name="symptoms"
-                  required
-                  rows={5}
-                  placeholder="Describe what the patient reports, in any language."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="duration">Duration of symptoms</Label>
-                <Input id="duration" name="duration" placeholder="e.g. 4 days" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="history">Basic medical history</Label>
-                <Textarea id="history" name="history" rows={3} placeholder="Chronic conditions, medicines, allergies" />
-              </div>
-            </div>
-          </section>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <TierCount label="RED" count={visits.filter((v) => v.risk_tier === "RED").length} />
+          <TierCount label="YELLOW" count={visits.filter((v) => v.risk_tier === "YELLOW").length} />
+          <TierCount label="GREEN" count={visits.filter((v) => v.risk_tier === "GREEN").length} />
+        </div>
 
-          <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Vitals
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-4">
-              <div className="space-y-2">
-                <Label htmlFor="temp">Temperature (°C)</Label>
-                <Input id="temp" name="temp" type="number" step="0.1" placeholder="37.0" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="bp">Blood pressure</Label>
-                <Input id="bp" name="bp" placeholder="120/80" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="pulse">Pulse (bpm)</Label>
-                <Input id="pulse" name="pulse" type="number" placeholder="78" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="spo2">SpO2 (%)</Label>
-                <Input id="spo2" name="spo2" type="number" placeholder="98" />
-              </div>
-            </div>
-          </section>
-
-          <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Attachment (optional)
-            </h2>
-            {file ? (
-              <div className="flex items-center justify-between rounded-xl border border-border bg-secondary px-4 py-3 text-sm">
-                <span className="truncate">{file.name}</span>
-                <button type="button" onClick={() => setFile(null)} aria-label="Remove file">
-                  <X className="size-4 text-muted-foreground" />
-                </button>
-              </div>
-            ) : (
-              <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-secondary/40 px-6 py-10 text-center transition-colors hover:border-primary/50">
-                <ImageUp className="size-6 text-primary" />
-                <span className="text-sm font-medium">Upload wound photo or prescription</span>
-                <span className="text-xs text-muted-foreground">PNG or JPG, drop or click to browse</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                />
-              </label>
-            )}
-          </section>
-
-          <Button type="submit" size="lg" disabled={busy} className="w-full sm:w-auto">
-            {busy ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-            {busy ? "Running assessment…" : "Submit for AI Assessment"}
-          </Button>
-        </form>
+        <p className="pb-2 text-xs text-muted-foreground">
+          Last updated {formatDateTime(new Date().toISOString())}
+        </p>
       </div>
     </AppShell>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  tone,
+}: {
+  label: string;
+  value: number;
+  icon: typeof Activity;
+  tone?: "red";
+}) {
+  return (
+    <div
+      className={`rounded-2xl border p-5 shadow-sm ${
+        tone === "red" && value > 0
+          ? "border-risk-red/30 bg-risk-red-soft text-risk-red"
+          : "border-border bg-card"
+      }`}
+    >
+      <Icon className="size-5 opacity-70" aria-hidden />
+      <p className="mt-3 text-3xl font-semibold tabular-nums">{value}</p>
+      <p className="mt-1 text-xs font-medium text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
+function TierCount({ label, count }: { label: string; count: number }) {
+  return (
+    <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-4 shadow-sm">
+      <RiskPill tier={label} withLabel />
+      <span className="text-2xl font-semibold tabular-nums">{count}</span>
+    </div>
   );
 }
