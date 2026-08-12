@@ -6,6 +6,7 @@ import {
   CalendarClock,
   ClipboardPlus,
   FileText,
+  FlaskConical,
   HeartPulse,
   History,
   LayoutDashboard,
@@ -68,6 +69,7 @@ const WORKER_NAV: NavGroup[] = [
     label: "grpTools",
     items: [
       { to: "/assistant", key: "assistant", icon: Bot },
+      { to: "/clinical-eval", key: "clinicalEval", icon: FlaskConical },
       { to: "/hospitals", key: "hospitals", icon: MapPin },
       { to: "/medicines", key: "medicines", icon: Pill },
       { to: "/settings", key: "settings", icon: Settings },
@@ -102,6 +104,7 @@ const DOCTOR_NAV: NavGroup[] = [
       { to: "/trends", key: "trends", icon: LineChart },
       { to: "/analytics", key: "analytics", icon: BarChart3 },
       { to: "/prescriptions", key: "prescriptions", icon: ScanText },
+      { to: "/clinical-eval", key: "clinicalEval", icon: FlaskConical },
       { to: "/settings", key: "settings", icon: Settings },
     ],
   },
