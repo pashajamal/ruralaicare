@@ -177,14 +177,19 @@ describe("scoreRisk — RED tier", () => {
  * ============================================================ */
 
 describe("scoreRisk — YELLOW tier", () => {
-  it("triggers YELLOW for symptoms persisting > 3 days", () => {
-    const result = scoreRisk(makeSummary({ duration: "5 days" }), "mild cough");
+  it("triggers YELLOW for fever persisting > 3 days", () => {
+    const result = scoreRisk(makeSummary({ duration: "5 days" }), "mild cough with fever");
     expect(result.tier).toBe("YELLOW");
     expect(result.rules.some((r) => r.includes("5 days"))).toBe(true);
   });
 
-  it("triggers YELLOW for 1 week duration (converted to 7 days)", () => {
+  it("stays GREEN for 1 week of mild symptoms with normal vitals", () => {
     const result = scoreRisk(makeSummary({ duration: "1 week" }), "runny nose");
+    expect(result.tier).toBe("GREEN");
+  });
+
+  it("triggers YELLOW for prolonged symptoms reported as worsening", () => {
+    const result = scoreRisk(makeSummary({ duration: "1 week" }), "cough getting worse");
     expect(result.tier).toBe("YELLOW");
   });
 
@@ -220,9 +225,9 @@ describe("scoreRisk — YELLOW tier", () => {
     expect(result.tier).toBe("YELLOW");
   });
 
-  it("triggers YELLOW for 'persistent' keyword", () => {
+  it("does NOT trigger YELLOW for 'persistent' wording alone", () => {
     const result = scoreRisk(makeSummary(), "persistent cough");
-    expect(result.tier).toBe("YELLOW");
+    expect(result.tier).toBe("GREEN");
   });
 
   it("does NOT trigger YELLOW for exactly 3-day duration (boundary)", () => {
@@ -231,9 +236,12 @@ describe("scoreRisk — YELLOW tier", () => {
     expect(result.tier).toBe("GREEN");
   });
 
-  it("handles duration in months (1 month = 30 days)", () => {
+  it("handles duration in months (1 month = 30 days) — GREEN without a concern signal", () => {
     const result = scoreRisk(makeSummary({ duration: "1 month" }), "back pain");
-    expect(result.tier).toBe("YELLOW");
+    expect(result.tier).toBe("GREEN");
+    const withFever = scoreRisk(makeSummary({ duration: "1 month" }), "back pain with fever");
+    expect(withFever.tier).toBe("YELLOW");
+    expect(withFever.rules.some((r) => r.includes("30 days"))).toBe(true);
   });
 
   it("handles duration in hours (no YELLOW trigger for < 72 hours)", () => {

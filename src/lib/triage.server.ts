@@ -427,8 +427,26 @@ export function scoreRisk(structured: StructuredSummary, symptomsText: string): 
   if (rules.length > 0) return { tier: "RED", rules };
 
   const durationDays = extractDays(structured.duration);
-  if (durationDays !== null && durationDays > 3) {
-    rules.push(`Symptoms persisting ${durationDays} days — beyond 3-day threshold`);
+  const prolonged = durationDays !== null && durationDays > 3;
+
+  // Concern signals that can pair with a prolonged duration.
+  const feverSignal =
+    (typeof v.temp === "number" && v.temp >= 38) || /\bfever\b|\bpyrexia\b|high temperature/.test(text);
+  const worsening = /worsen|getting worse|deteriorat|not improving|no improvement|increasing|aggravat/.test(text);
+  const abnormalVitals =
+    (typeof v.spo2 === "number" && v.spo2 < 95) ||
+    (typeof v.temp === "number" && v.temp >= 38) ||
+    (typeof v.pulse === "number" && (v.pulse > 110 || v.pulse < 50));
+
+  // Duration alone is NOT a YELLOW trigger: it must be paired with a genuine concern signal.
+  if (prolonged) {
+    if (feverSignal) {
+      rules.push(`Fever persisting ${durationDays} days — fever beyond the 3-day threshold`);
+    } else if (worsening) {
+      rules.push(`Symptoms persisting ${durationDays} days and reported as worsening`);
+    } else if (abnormalVitals) {
+      rules.push(`Symptoms persisting ${durationDays} days with vitals trending abnormal`);
+    }
   }
   if (typeof v.temp === "number" && v.temp >= 38.5) {
     rules.push(`Temperature ${v.temp}°C — moderate fever`);
@@ -444,12 +462,18 @@ export function scoreRisk(structured: StructuredSummary, symptomsText: string): 
       rules.push(`Blood pressure ${v.bp} — elevated (sys ≥ 140 or dia ≥ 90)`);
     }
   }
-  for (const flag of ["vomiting", "dehydration", "blood", "severe", "persistent"]) {
+  for (const flag of ["vomiting", "dehydration", "blood", "severe"]) {
     if (text.includes(flag)) rules.push(`Moderate-severity indicator: "${flag}"`);
   }
   if (rules.length > 0) return { tier: "YELLOW", rules };
 
-  return { tier: "GREEN", rules: ["No red-flag vitals or symptoms detected; vitals within safe ranges"] };
+  const greenRules = ["No red-flag vitals or symptoms detected; vitals within safe ranges"];
+  if (prolonged) {
+    greenRules.push(
+      `Symptoms present ${durationDays} days, but no fever, no reported worsening and vitals normal — duration alone does not raise the tier`,
+    );
+  }
+  return { tier: "GREEN", rules: greenRules };
 }
 
 function extractDays(duration: string): number | null {
