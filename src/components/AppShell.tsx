@@ -1,8 +1,10 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Activity,
+  BarChart3,
   CalendarClock,
   ClipboardPlus,
+  FileText,
   History,
   LayoutDashboard,
   ListChecks,
@@ -26,8 +28,8 @@ type NavItem = { to: string; key: Parameters<typeof t>[1]; icon: typeof LayoutDa
 const WORKER_NAV: NavItem[] = [
   { to: "/", key: "dashboard", icon: LayoutDashboard },
   { to: "/intake", key: "intake", icon: ClipboardPlus },
+  { to: "/my-cases", key: "myCases", icon: FileText },
   { to: "/queue", key: "queue", icon: ListChecks },
-  { to: "/doctor", key: "workspace", icon: Stethoscope },
   { to: "/history", key: "history", icon: History },
   { to: "/referrals", key: "referrals", icon: Send },
   { to: "/followups", key: "followups", icon: CalendarClock },
@@ -36,8 +38,9 @@ const WORKER_NAV: NavItem[] = [
 
 const DOCTOR_NAV: NavItem[] = [
   { to: "/", key: "dashboard", icon: LayoutDashboard },
-  { to: "/doctor", key: "consultQueue", icon: Stethoscope },
+  { to: "/doctor", key: "reviewQueue", icon: Stethoscope },
   { to: "/history", key: "history", icon: History },
+  { to: "/analytics", key: "analytics", icon: BarChart3 },
   { to: "/referrals", key: "referrals", icon: Send },
   { to: "/followups", key: "followups", icon: CalendarClock },
   { to: "/settings", key: "settings", icon: Settings },
