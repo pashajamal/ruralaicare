@@ -11,15 +11,20 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
+import { Route as AssistantRouteImport } from './routes/assistant'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CarePlansRouteImport } from './routes/care-plans'
 import { Route as DoctorRouteImport } from './routes/doctor'
 import { Route as FollowupsRouteImport } from './routes/followups'
 import { Route as HistoryRouteImport } from './routes/history'
+import { Route as HospitalsRouteImport } from './routes/hospitals'
 import { Route as IntakeRouteImport } from './routes/intake'
 import { Route as MyCasesRouteImport } from './routes/my-cases'
 import { Route as QueueRouteImport } from './routes/queue'
 import { Route as ReferralsRouteImport } from './routes/referrals'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as TrackerRouteImport } from './routes/tracker'
+import { Route as TrendsRouteImport } from './routes/trends'
 import { Route as PatientsPatientIdRouteImport } from './routes/patients.$patientId'
 import { Route as ReferralVisitIdRouteImport } from './routes/referral.$visitId'
 import { Route as ReviewVisitIdRouteImport } from './routes/review.$visitId'
@@ -34,9 +39,19 @@ const AnalyticsRoute = AnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AssistantRoute = AssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CarePlansRoute = CarePlansRouteImport.update({
+  id: '/care-plans',
+  path: '/care-plans',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DoctorRoute = DoctorRouteImport.update({
@@ -52,6 +67,11 @@ const FollowupsRoute = FollowupsRouteImport.update({
 const HistoryRoute = HistoryRouteImport.update({
   id: '/history',
   path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HospitalsRoute = HospitalsRouteImport.update({
+  id: '/hospitals',
+  path: '/hospitals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IntakeRoute = IntakeRouteImport.update({
@@ -79,6 +99,16 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TrackerRoute = TrackerRouteImport.update({
+  id: '/tracker',
+  path: '/tracker',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrendsRoute = TrendsRouteImport.update({
+  id: '/trends',
+  path: '/trends',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PatientsPatientIdRoute = PatientsPatientIdRouteImport.update({
   id: '/patients/$patientId',
   path: '/patients/$patientId',
@@ -98,15 +128,20 @@ const ReviewVisitIdRoute = ReviewVisitIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
+  '/assistant': typeof AssistantRoute
   '/auth': typeof AuthRoute
+  '/care-plans': typeof CarePlansRoute
   '/doctor': typeof DoctorRoute
   '/followups': typeof FollowupsRoute
   '/history': typeof HistoryRoute
+  '/hospitals': typeof HospitalsRoute
   '/intake': typeof IntakeRoute
   '/my-cases': typeof MyCasesRoute
   '/queue': typeof QueueRoute
   '/referrals': typeof ReferralsRoute
   '/settings': typeof SettingsRoute
+  '/tracker': typeof TrackerRoute
+  '/trends': typeof TrendsRoute
   '/patients/$patientId': typeof PatientsPatientIdRoute
   '/referral/$visitId': typeof ReferralVisitIdRoute
   '/review/$visitId': typeof ReviewVisitIdRoute
@@ -114,15 +149,20 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
+  '/assistant': typeof AssistantRoute
   '/auth': typeof AuthRoute
+  '/care-plans': typeof CarePlansRoute
   '/doctor': typeof DoctorRoute
   '/followups': typeof FollowupsRoute
   '/history': typeof HistoryRoute
+  '/hospitals': typeof HospitalsRoute
   '/intake': typeof IntakeRoute
   '/my-cases': typeof MyCasesRoute
   '/queue': typeof QueueRoute
   '/referrals': typeof ReferralsRoute
   '/settings': typeof SettingsRoute
+  '/tracker': typeof TrackerRoute
+  '/trends': typeof TrendsRoute
   '/patients/$patientId': typeof PatientsPatientIdRoute
   '/referral/$visitId': typeof ReferralVisitIdRoute
   '/review/$visitId': typeof ReviewVisitIdRoute
@@ -131,15 +171,20 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
+  '/assistant': typeof AssistantRoute
   '/auth': typeof AuthRoute
+  '/care-plans': typeof CarePlansRoute
   '/doctor': typeof DoctorRoute
   '/followups': typeof FollowupsRoute
   '/history': typeof HistoryRoute
+  '/hospitals': typeof HospitalsRoute
   '/intake': typeof IntakeRoute
   '/my-cases': typeof MyCasesRoute
   '/queue': typeof QueueRoute
   '/referrals': typeof ReferralsRoute
   '/settings': typeof SettingsRoute
+  '/tracker': typeof TrackerRoute
+  '/trends': typeof TrendsRoute
   '/patients/$patientId': typeof PatientsPatientIdRoute
   '/referral/$visitId': typeof ReferralVisitIdRoute
   '/review/$visitId': typeof ReviewVisitIdRoute
@@ -149,15 +194,20 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/analytics'
+    | '/assistant'
     | '/auth'
+    | '/care-plans'
     | '/doctor'
     | '/followups'
     | '/history'
+    | '/hospitals'
     | '/intake'
     | '/my-cases'
     | '/queue'
     | '/referrals'
     | '/settings'
+    | '/tracker'
+    | '/trends'
     | '/patients/$patientId'
     | '/referral/$visitId'
     | '/review/$visitId'
@@ -165,15 +215,20 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/analytics'
+    | '/assistant'
     | '/auth'
+    | '/care-plans'
     | '/doctor'
     | '/followups'
     | '/history'
+    | '/hospitals'
     | '/intake'
     | '/my-cases'
     | '/queue'
     | '/referrals'
     | '/settings'
+    | '/tracker'
+    | '/trends'
     | '/patients/$patientId'
     | '/referral/$visitId'
     | '/review/$visitId'
@@ -181,15 +236,20 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/analytics'
+    | '/assistant'
     | '/auth'
+    | '/care-plans'
     | '/doctor'
     | '/followups'
     | '/history'
+    | '/hospitals'
     | '/intake'
     | '/my-cases'
     | '/queue'
     | '/referrals'
     | '/settings'
+    | '/tracker'
+    | '/trends'
     | '/patients/$patientId'
     | '/referral/$visitId'
     | '/review/$visitId'
@@ -198,15 +258,20 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyticsRoute: typeof AnalyticsRoute
+  AssistantRoute: typeof AssistantRoute
   AuthRoute: typeof AuthRoute
+  CarePlansRoute: typeof CarePlansRoute
   DoctorRoute: typeof DoctorRoute
   FollowupsRoute: typeof FollowupsRoute
   HistoryRoute: typeof HistoryRoute
+  HospitalsRoute: typeof HospitalsRoute
   IntakeRoute: typeof IntakeRoute
   MyCasesRoute: typeof MyCasesRoute
   QueueRoute: typeof QueueRoute
   ReferralsRoute: typeof ReferralsRoute
   SettingsRoute: typeof SettingsRoute
+  TrackerRoute: typeof TrackerRoute
+  TrendsRoute: typeof TrendsRoute
   PatientsPatientIdRoute: typeof PatientsPatientIdRoute
   ReferralVisitIdRoute: typeof ReferralVisitIdRoute
   ReviewVisitIdRoute: typeof ReviewVisitIdRoute
@@ -228,11 +293,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/assistant': {
+      id: '/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof AssistantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/care-plans': {
+      id: '/care-plans'
+      path: '/care-plans'
+      fullPath: '/care-plans'
+      preLoaderRoute: typeof CarePlansRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/doctor': {
@@ -254,6 +333,13 @@ declare module '@tanstack/react-router' {
       path: '/history'
       fullPath: '/history'
       preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hospitals': {
+      id: '/hospitals'
+      path: '/hospitals'
+      fullPath: '/hospitals'
+      preLoaderRoute: typeof HospitalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/intake': {
@@ -291,6 +377,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tracker': {
+      id: '/tracker'
+      path: '/tracker'
+      fullPath: '/tracker'
+      preLoaderRoute: typeof TrackerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trends': {
+      id: '/trends'
+      path: '/trends'
+      fullPath: '/trends'
+      preLoaderRoute: typeof TrendsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/patients/$patientId': {
       id: '/patients/$patientId'
       path: '/patients/$patientId'
@@ -318,15 +418,20 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyticsRoute: AnalyticsRoute,
+  AssistantRoute: AssistantRoute,
   AuthRoute: AuthRoute,
+  CarePlansRoute: CarePlansRoute,
   DoctorRoute: DoctorRoute,
   FollowupsRoute: FollowupsRoute,
   HistoryRoute: HistoryRoute,
+  HospitalsRoute: HospitalsRoute,
   IntakeRoute: IntakeRoute,
   MyCasesRoute: MyCasesRoute,
   QueueRoute: QueueRoute,
   ReferralsRoute: ReferralsRoute,
   SettingsRoute: SettingsRoute,
+  TrackerRoute: TrackerRoute,
+  TrendsRoute: TrendsRoute,
   PatientsPatientIdRoute: PatientsPatientIdRoute,
   ReferralVisitIdRoute: ReferralVisitIdRoute,
   ReviewVisitIdRoute: ReviewVisitIdRoute,

@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Json } from "@/integrations/supabase/types";
+import { specialtyFor } from "./specialty";
 import {
   analyzeImage,
   fetchDrugSafety,
@@ -173,6 +174,7 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
       triggering_rules: risk.rules,
       protocol_text: protocolText,
       drug_safety_info: drugSafety as unknown as Json,
+      hospital_specialty_tag: specialtyFor(`${input.symptoms} ${structured.symptoms.join(" ")} ${assessment ?? ""}`),
       ai_status: aiStatus,
       referral_required: risk.tier === "RED",
       updated_at: new Date().toISOString(),

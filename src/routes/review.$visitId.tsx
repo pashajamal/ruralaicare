@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
@@ -25,6 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { STATUS_LABEL, formatDateTime, logAudit, notify, safetyGate } from "@/lib/clinic";
+import { createCarePlan } from "@/lib/tracker.functions";
 
 export const Route = createFileRoute("/review/$visitId")({
   head: () => ({
@@ -58,9 +60,17 @@ function ReviewPage() {
   const [followReason, setFollowReason] = useState("");
   const [followInstructions, setFollowInstructions] = useState("");
   const [followPriority, setFollowPriority] = useState("routine");
+  const [carePlanOn, setCarePlanOn] = useState(false);
+  const [carePlan, setCarePlan] = useState({
+    medication_instructions: "",
+    monitoring_instructions: "",
+    watch_symptoms: "",
+    monitoring_days: 7,
+  });
   const [saving, setSaving] = useState(false);
   const [confirmReferral, setConfirmReferral] = useState(false);
   const openedRef = useRef(false);
+  const saveCarePlanFn = useServerFn(createCarePlan);
 
   const { data: visit, isLoading, isError } = useQuery({
     queryKey: ["visit", visitId],
@@ -260,6 +270,28 @@ function ReviewPage() {
         status: "scheduled",
       });
       await logAudit(actor, { visitId: visit.id, patientId: visit.patient_id, action: "Follow-up scheduled", detail: followDate });
+    }
+
+    if (carePlanOn && tier !== "RED") {
+      try {
+        await saveCarePlanFn({
+          data: {
+            visit_id: visit.id,
+            patient_id: visit.patient_id,
+            medication_instructions: carePlan.medication_instructions,
+            monitoring_instructions: carePlan.monitoring_instructions,
+            watch_symptoms: carePlan.watch_symptoms
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean),
+            monitoring_days: Number(carePlan.monitoring_days),
+            follow_up_date: followDate || null,
+          },
+        });
+        toast.success("Care plan created and daily-log reminders generated");
+      } catch {
+        toast.error("Decision saved, but the care plan could not be created");
+      }
     }
 
     await notify({
@@ -657,6 +689,71 @@ function ReviewPage() {
                 </div>
 
                 {/* Safety gate */}
+                {tier !== "RED" ? (
+                  <div className="rounded-xl bg-card p-4">
+                    <label className="flex items-center gap-3 text-sm font-medium">
+                      <input
+                        type="checkbox"
+                        className="size-4"
+                        checked={carePlanOn}
+                        disabled={!isDoctor}
+                        onChange={(e) => setCarePlanOn(e.target.checked)}
+                      />
+                      Create a home care plan
+                    </label>
+                    {carePlanOn ? (
+                      <div className="mt-3 space-y-3">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="cpmed">Medication / dosage instructions</Label>
+                          <Textarea
+                            id="cpmed"
+                            rows={2}
+                            value={carePlan.medication_instructions}
+                            onChange={(e) => setCarePlan({ ...carePlan, medication_instructions: e.target.value })}
+                            placeholder="e.g. Paracetamol 500 mg, twice daily after food, for 3 days"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="cpmon">Home-monitoring instructions</Label>
+                          <Textarea
+                            id="cpmon"
+                            rows={2}
+                            value={carePlan.monitoring_instructions}
+                            onChange={(e) => setCarePlan({ ...carePlan, monitoring_instructions: e.target.value })}
+                            placeholder="e.g. Log temperature, pulse and SpO2 every morning"
+                          />
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="space-y-1.5">
+                            <Label htmlFor="cpdays">Monitoring days</Label>
+                            <Input
+                              id="cpdays"
+                              type="number"
+                              min={1}
+                              max={30}
+                              value={carePlan.monitoring_days}
+                              onChange={(e) => setCarePlan({ ...carePlan, monitoring_days: Number(e.target.value) })}
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="cpwatch">Watch for these symptoms (comma separated)</Label>
+                            <Input
+                              id="cpwatch"
+                              value={carePlan.watch_symptoms}
+                              onChange={(e) => setCarePlan({ ...carePlan, watch_symptoms: e.target.value })}
+                              placeholder="breathlessness, confusion, fever above 39"
+                            />
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          This pushes daily-log reminders to the health worker's Daily Tracker. Every logged reading is
+                          re-checked by the deterministic escalation engine.
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+
                 <div className="rounded-xl border border-risk-green/30 bg-card p-4">
                   <p className="text-sm font-bold">
                     Safety Gate: {passed}/{checks.length} checks completed

@@ -68,6 +68,69 @@ export type Database = {
           },
         ]
       }
+      care_plans: {
+        Row: {
+          created_at: string
+          doctor_id: string | null
+          follow_up_date: string | null
+          health_centre: string
+          id: string
+          medication_instructions: string | null
+          monitoring_days: number
+          monitoring_instructions: string | null
+          patient_id: string
+          status: string
+          updated_at: string
+          visit_id: string
+          watch_symptoms: Json
+        }
+        Insert: {
+          created_at?: string
+          doctor_id?: string | null
+          follow_up_date?: string | null
+          health_centre?: string
+          id?: string
+          medication_instructions?: string | null
+          monitoring_days?: number
+          monitoring_instructions?: string | null
+          patient_id: string
+          status?: string
+          updated_at?: string
+          visit_id: string
+          watch_symptoms?: Json
+        }
+        Update: {
+          created_at?: string
+          doctor_id?: string | null
+          follow_up_date?: string | null
+          health_centre?: string
+          id?: string
+          medication_instructions?: string | null
+          monitoring_days?: number
+          monitoring_instructions?: string | null
+          patient_id?: string
+          status?: string
+          updated_at?: string
+          visit_id?: string
+          watch_symptoms?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "care_plans_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "care_plans_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consultations: {
         Row: {
           assigned_doctor: string | null
@@ -124,6 +187,140 @@ export type Database = {
           },
           {
             foreignKeyName: "consultations_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_tracker_entries: {
+        Row: {
+          care_plan_id: string | null
+          created_at: string
+          entry_date: string
+          escalation_flag: boolean
+          health_centre: string
+          id: string
+          logged_by: string | null
+          note: string | null
+          patient_id: string
+          pulse: number | null
+          severity_score: number
+          spo2: number | null
+          temperature: number | null
+        }
+        Insert: {
+          care_plan_id?: string | null
+          created_at?: string
+          entry_date?: string
+          escalation_flag?: boolean
+          health_centre?: string
+          id?: string
+          logged_by?: string | null
+          note?: string | null
+          patient_id: string
+          pulse?: number | null
+          severity_score?: number
+          spo2?: number | null
+          temperature?: number | null
+        }
+        Update: {
+          care_plan_id?: string | null
+          created_at?: string
+          entry_date?: string
+          escalation_flag?: boolean
+          health_centre?: string
+          id?: string
+          logged_by?: string | null
+          note?: string | null
+          patient_id?: string
+          pulse?: number | null
+          severity_score?: number
+          spo2?: number | null
+          temperature?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_tracker_entries_care_plan_id_fkey"
+            columns: ["care_plan_id"]
+            isOneToOne: false
+            referencedRelation: "care_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_tracker_entries_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      escalations: {
+        Row: {
+          care_plan_id: string | null
+          created_at: string
+          daily_tracker_entry_id: string | null
+          health_centre: string
+          id: string
+          patient_id: string
+          reason: string
+          status: string
+          tier: string
+          updated_at: string
+          visit_id: string | null
+        }
+        Insert: {
+          care_plan_id?: string | null
+          created_at?: string
+          daily_tracker_entry_id?: string | null
+          health_centre?: string
+          id?: string
+          patient_id: string
+          reason: string
+          status?: string
+          tier?: string
+          updated_at?: string
+          visit_id?: string | null
+        }
+        Update: {
+          care_plan_id?: string | null
+          created_at?: string
+          daily_tracker_entry_id?: string | null
+          health_centre?: string
+          id?: string
+          patient_id?: string
+          reason?: string
+          status?: string
+          tier?: string
+          updated_at?: string
+          visit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escalations_care_plan_id_fkey"
+            columns: ["care_plan_id"]
+            isOneToOne: false
+            referencedRelation: "care_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalations_daily_tracker_entry_id_fkey"
+            columns: ["daily_tracker_entry_id"]
+            isOneToOne: false
+            referencedRelation: "daily_tracker_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalations_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalations_visit_id_fkey"
             columns: ["visit_id"]
             isOneToOne: false
             referencedRelation: "visits"
@@ -217,6 +414,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      hospitals: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          latitude: number
+          longitude: number
+          name: string
+          phone: string | null
+          specialty_tags: Json
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          latitude: number
+          longitude: number
+          name: string
+          phone?: string | null
+          specialty_tags?: Json
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          name?: string
+          phone?: string | null
+          specialty_tags?: Json
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -400,6 +630,54 @@ export type Database = {
           },
         ]
       }
+      reminders: {
+        Row: {
+          care_plan_id: string | null
+          created_at: string
+          due_date: string
+          health_centre: string
+          id: string
+          patient_id: string
+          status: string
+          type: string
+        }
+        Insert: {
+          care_plan_id?: string | null
+          created_at?: string
+          due_date: string
+          health_centre?: string
+          id?: string
+          patient_id: string
+          status?: string
+          type?: string
+        }
+        Update: {
+          care_plan_id?: string | null
+          created_at?: string
+          due_date?: string
+          health_centre?: string
+          id?: string
+          patient_id?: string
+          status?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminders_care_plan_id_fkey"
+            columns: ["care_plan_id"]
+            isOneToOne: false
+            referencedRelation: "care_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminders_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -436,6 +714,7 @@ export type Database = {
           finalized_at: string | null
           health_centre: string
           history_text: string | null
+          hospital_specialty_tag: string | null
           id: string
           image_analysis: string | null
           image_url: string | null
@@ -465,6 +744,7 @@ export type Database = {
           finalized_at?: string | null
           health_centre?: string
           history_text?: string | null
+          hospital_specialty_tag?: string | null
           id?: string
           image_analysis?: string | null
           image_url?: string | null
@@ -494,6 +774,7 @@ export type Database = {
           finalized_at?: string | null
           health_centre?: string
           history_text?: string | null
+          hospital_specialty_tag?: string | null
           id?: string
           image_analysis?: string | null
           image_url?: string | null
