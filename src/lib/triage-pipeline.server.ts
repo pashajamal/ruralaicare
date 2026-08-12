@@ -145,7 +145,7 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
       status: "pending_review",
       health_centre: centre,
       created_by: userId,
-      chronic_conditions: chronic as unknown as Json,
+      chronic_conditions: { conditions: chronic, alerts: [], guardrails: [] } as unknown as Json,
       pregnancy_status: (pregnancy ?? null) as unknown as Json,
     })
     .select("id")
@@ -223,7 +223,7 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
   let protocolText: string | null = null;
   let drugSafety: DrugSafety | null = null;
   let ayurvedic: { condition_name: string; remedy_text: string; source_reference: string | null } | null = null;
-  let guardrailNotes: string[] = [];
+  const guardrailNotes: string[] = [];
   if (risk.tier === "GREEN") {
     try {
       const protocol = await lookupProtocol(structured, input.symptoms);
