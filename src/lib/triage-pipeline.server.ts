@@ -78,7 +78,12 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
   if (patient) {
     await supabaseAdmin
       .from("patients")
-      .update({ name: input.name, age: input.age, preferred_language: input.preferred_language })
+      .update({
+        name: input.name,
+        age: input.age,
+        preferred_language: input.preferred_language,
+        ...(input.sex ? { sex: input.sex } : {}),
+      })
       .eq("id", patient.id);
   } else {
     const { data: created, error: patientError } = await supabaseAdmin
@@ -91,12 +96,42 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
         preferred_language: input.preferred_language,
         health_centre: centre,
         created_by: userId,
+        sex: input.sex ?? null,
       })
       .select("id")
       .single();
     if (patientError || !created) throw new Error("Could not save patient record");
     patient = created;
   }
+
+  // Chronic conditions are persistent per patient: upsert what was entered, then read back the full record.
+  const submitted = input.chronic_conditions ?? [];
+  if (submitted.length > 0) {
+    await supabaseAdmin.from("patient_conditions").upsert(
+      submitted.map((c) => ({
+        patient_id: patient.id,
+        health_centre: centre,
+        condition_name: c.condition_name,
+        on_medication: c.on_medication,
+        medication_name: c.medication_name || null,
+        diagnosed_note: c.diagnosed_note ?? null,
+        updated_at: new Date().toISOString(),
+      })),
+      { onConflict: "patient_id,condition_name" },
+    );
+  }
+  const { data: storedConditions } = await supabaseAdmin
+    .from("patient_conditions")
+    .select("condition_name, on_medication, medication_name, diagnosed_note")
+    .eq("patient_id", patient.id);
+  const chronic: ChronicCondition[] = (storedConditions ?? []).map((c) => ({
+    condition_name: c.condition_name,
+    on_medication: Boolean(c.on_medication),
+    medication_name: c.medication_name ?? "",
+    diagnosed_note: c.diagnosed_note ?? "",
+  }));
+  const pregnancy = input.pregnancy_status ?? null;
+  const conditionCtx = { chronic, pregnancy };
 
   const { data: visit, error: visitError } = await supabaseAdmin
     .from("visits")
@@ -110,6 +145,8 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
       status: "pending_review",
       health_centre: centre,
       created_by: userId,
+      chronic_conditions: chronic as unknown as Json,
+      pregnancy_status: (pregnancy ?? null) as unknown as Json,
     })
     .select("id")
     .single();
