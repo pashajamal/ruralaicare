@@ -1,4 +1,15 @@
-export const UI_LANGUAGES = ["English", "Hindi", "Hinglish"] as const;
+export const UI_LANGUAGES = [
+  "English",
+  "Hindi",
+  "Hinglish",
+  "Bangla",
+  "Tamil",
+  "Telugu",
+  "Marathi",
+  "Gujarati",
+  "Kannada",
+  "Punjabi",
+] as const;
 export type UiLanguage = (typeof UI_LANGUAGES)[number];
 
 type Dict = Record<string, string>;
