@@ -314,6 +314,29 @@ export function IntakePage() {
           </p>
         </header>
 
+        <section className="mb-5 flex flex-wrap items-end gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
+          <div className="min-w-56 space-y-2">
+            <Label htmlFor="language">Patient / consultation language</Label>
+            <Select value={language} onValueChange={(v) => { setLanguage(v); saveDraft(); }}>
+              <SelectTrigger id="language">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PATIENT_LANGUAGES.map((l) => (
+                  <SelectItem key={l} value={l}>
+                    {l}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <p className="flex-1 text-xs text-muted-foreground">
+            Sets the language spoken back to the patient and hints the AI, while still allowing mixed-language speech.
+            {language === AUTO_DETECT ? " Auto-detect keeps whatever language the AI detects on the record." : null}
+            {detected ? <span className="ml-1 font-medium text-foreground">Detected: {detected}.</span> : null}
+          </p>
+        </section>
+
         {!online ? (
           <div className="mb-5 flex items-start gap-3 rounded-2xl border border-risk-amber/30 bg-risk-amber-soft p-4 text-sm text-risk-amber">
             <CloudOff className="mt-0.5 size-4" aria-hidden />
@@ -401,21 +424,6 @@ export function IntakePage() {
                 <Label htmlFor="age">Age</Label>
                 <Input id="age" name="age" type="number" min={0} max={120} required placeholder="Years" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="language">Preferred language</Label>
-                <Select value={language} onValueChange={setLanguage}>
-                  <SelectTrigger id="language">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LANGUAGES.map((l) => (
-                      <SelectItem key={l} value={l}>
-                        {l}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
           </section>
 
@@ -425,22 +433,53 @@ export function IntakePage() {
             </h2>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="symptoms">Symptoms description</Label>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Label htmlFor="symptoms">Symptoms description</Label>
+                  <VoiceRecorder
+                    field="symptoms"
+                    languageHint={language}
+                    onTranscript={(text, lang) => applyTranscript("symptoms", text, lang)}
+                  />
+                </div>
                 <Textarea
                   id="symptoms"
                   name="symptoms"
+                  ref={symptomsRef}
                   required
                   rows={5}
                   placeholder="Write in any language the health worker is comfortable with."
                 />
+                {voiceFilled['symptoms'] ? (
+                  <p className="text-xs text-risk-amber">
+                    Transcribed from voice — please read it back and correct any misheard words before submitting.
+                  </p>
+                ) : null}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="duration">Duration of symptoms</Label>
                 <Input id="duration" name="duration" placeholder="e.g. 3 days" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="history">Basic medical history</Label>
-                <Textarea id="history" name="history" rows={3} placeholder="Chronic conditions, medicines, allergies" />
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Label htmlFor="history">Basic medical history</Label>
+                  <VoiceRecorder
+                    field="history"
+                    languageHint={language}
+                    onTranscript={(text, lang) => applyTranscript("history", text, lang)}
+                  />
+                </div>
+                <Textarea
+                  id="history"
+                  name="history"
+                  ref={historyRef}
+                  rows={3}
+                  placeholder="Chronic conditions, medicines, allergies"
+                />
+                {voiceFilled['history'] ? (
+                  <p className="text-xs text-risk-amber">
+                    Transcribed from voice — please read it back and correct any misheard words before submitting.
+                  </p>
+                ) : null}
               </div>
             </div>
           </section>
