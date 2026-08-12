@@ -63,8 +63,11 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
     .select("full_name, health_centre")
     .eq("id", userId)
     .maybeSingle();
-  const centre = profile?.health_centre ?? "Rampur Health Centre";
-  const workerName = profile?.full_name || "Health worker";
+  if (!profile?.health_centre) {
+    throw new Error("User profile is missing health centre configuration. Please update profile settings.");
+  }
+  const centre = profile.health_centre;
+  const workerName = profile.full_name || "Health worker";
 
   // 1. Persist patient + visit immediately (status: pending_review).
   // Mobile number is the lookup key: an existing patient is reused across visits.

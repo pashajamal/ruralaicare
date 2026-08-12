@@ -94,6 +94,13 @@ export async function analyzeImage(imagePath: string): Promise<string | null> {
   );
 }
 
+export function sanitizeText(str: string | undefined | null, maxLength = 2000): string {
+  if (!str) return "";
+  // Strip control characters except standard newlines and tabs
+  const cleaned = str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+  return cleaned.trim().slice(0, maxLength);
+}
+
 /* ---------------- Step 1: structuring ---------------- */
 
 export async function structureIntake(input: {
@@ -106,8 +113,19 @@ export async function structureIntake(input: {
   vitals: Vitals;
   imageAnalysis?: string | null;
 }): Promise<StructuredSummary> {
+  const sanitizedInput = {
+    name: sanitizeText(input.name, 150),
+    age: Math.min(Math.max(Number(input.age) || 0, 0), 120),
+    language: sanitizeText(input.language, 50),
+    symptoms: sanitizeText(input.symptoms, 2500),
+    duration: sanitizeText(input.duration, 150),
+    history: sanitizeText(input.history, 2500),
+    vitals: input.vitals,
+    imageAnalysis: input.imageAnalysis ? sanitizeText(input.imageAnalysis, 1500) : null,
+  };
+
   const raw = await callGemini(
-    JSON.stringify(input),
+    JSON.stringify(sanitizedInput),
     `Extract structured clinical intake data from the health worker's raw text. It may be in English, Hindi (Devanagari), Hinglish (Hindi in Roman script), Bangla, Tamil, Telugu, Marathi, and languages may be mixed within one note.
 Return ONLY JSON with this exact shape:
 {"symptoms":[string],"duration":string,"age":number,"vitals":{"temp":number|null,"bp":string|null,"pulse":number|null,"spo2":number|null},"history":string,"detected_language":string,"confirmation_message":string}
@@ -395,6 +413,17 @@ export function scoreRisk(structured: StructuredSummary, symptomsText: string): 
   if (typeof v.pulse === "number" && (v.pulse > 130 || v.pulse < 45)) {
     rules.push(`Pulse ${v.pulse} bpm — outside safe range (45–130)`);
   }
+  // Blood pressure: parse "sys/dia" and flag crisis-level readings
+  const bpMatch = typeof v.bp === "string" ? v.bp.match(/^\s*(\d{2,3})\s*\/\s*(\d{2,3})\s*$/) : null;
+  if (bpMatch) {
+    const sys = Number(bpMatch[1]);
+    const dia = Number(bpMatch[2]);
+    if (sys >= 180 || dia >= 120) {
+      rules.push(`Blood pressure ${v.bp} — hypertensive crisis (sys ≥ 180 or dia ≥ 120)`);
+    } else if (sys < 90) {
+      rules.push(`Blood pressure ${v.bp} — severe hypotension (sys < 90)`);
+    }
+  }
   if (rules.length > 0) return { tier: "RED", rules };
 
   const durationDays = extractDays(structured.duration);
@@ -406,6 +435,14 @@ export function scoreRisk(structured: StructuredSummary, symptomsText: string): 
   }
   if (typeof v.spo2 === "number" && v.spo2 >= 92 && v.spo2 < 95) {
     rules.push(`SpO2 ${v.spo2}% — borderline oxygen saturation`);
+  }
+  // Blood pressure: elevated (not crisis) triggers YELLOW
+  if (bpMatch) {
+    const sys = Number(bpMatch[1]);
+    const dia = Number(bpMatch[2]);
+    if (sys >= 140 || dia >= 90) {
+      rules.push(`Blood pressure ${v.bp} — elevated (sys ≥ 140 or dia ≥ 90)`);
+    }
   }
   for (const flag of ["vomiting", "dehydration", "blood", "severe", "persistent"]) {
     if (text.includes(flag)) rules.push(`Moderate-severity indicator: "${flag}"`);
