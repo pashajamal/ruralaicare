@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   ArrowDown,
   CheckCircle2,
+  Flag,
   Leaf,
   Loader2,
   Printer,
@@ -18,6 +19,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { AuditTimeline } from "@/components/AuditTimeline";
 import { CaseConsultBar } from "@/components/CaseConsultBar";
+import { ConditionBadges } from "@/components/ConditionBadges";
 import { DecisionAudit } from "@/components/DecisionAudit";
 import { MedicineBadge, MedicineMentions } from "@/components/MedicineBadge";
 import { ReferralHospitals } from "@/components/ReferralHospitals";
@@ -31,6 +33,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { STATUS_LABEL, formatDateTime, logAudit, notify, safetyGate } from "@/lib/clinic";
+import type { PregnancyStatus } from "@/lib/conditions";
 import { createCarePlan } from "@/lib/tracker.functions";
 
 export const Route = createFileRoute("/review/$visitId")({
