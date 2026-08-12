@@ -828,32 +828,38 @@ export type Database = {
         Row: {
           created_at: string
           dosage: string | null
+          extracted_ocr_text: string | null
           id: string
           image_filename: string
           medication_details: string | null
           patient_name: string | null
           processed: boolean
           raw_ocr_text: string | null
+          structured_data: Json | null
         }
         Insert: {
           created_at?: string
           dosage?: string | null
+          extracted_ocr_text?: string | null
           id?: string
           image_filename: string
           medication_details?: string | null
           patient_name?: string | null
           processed?: boolean
           raw_ocr_text?: string | null
+          structured_data?: Json | null
         }
         Update: {
           created_at?: string
           dosage?: string | null
+          extracted_ocr_text?: string | null
           id?: string
           image_filename?: string
           medication_details?: string | null
           patient_name?: string | null
           processed?: boolean
           raw_ocr_text?: string | null
+          structured_data?: Json | null
         }
         Relationships: []
       }
