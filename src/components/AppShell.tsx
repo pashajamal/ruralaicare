@@ -59,7 +59,7 @@ export function TrustBadge() {
   return (
     <div className="ml-auto flex items-center gap-2 rounded-full border border-border bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-foreground">
       <ShieldCheck className="size-4 text-primary" />
-      <span className="text-ai-border-foreground">AI Suggestion</span>
+      <span>AI Suggestion</span>
       <span className="text-muted-foreground">vs</span>
       <span>Doctor Decision</span>
       <span className="hidden text-muted-foreground sm:inline">— nothing is final until a doctor signs off</span>
