@@ -1,6 +1,6 @@
+import { geminiFetch } from "./gemini.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-2.5-flash";
 
 export const ASSISTANT_DISCLAIMER =
@@ -66,20 +66,13 @@ export async function answerScopedQuestion(args: {
 }
 
 async function callGateway(system: string, user: string): Promise<string> {
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("AI assistant is temporarily unavailable");
-
-  const res = await fetch(GATEWAY, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
-    body: JSON.stringify({
+  const res = await geminiFetch("/chat/completions", ({
       model: MODEL,
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
       ],
-    }),
-  });
+  }));
 
   if (res.status === 429) throw new Error("AI rate limit reached. Please retry in a moment.");
   if (res.status === 402) throw new Error("AI credits exhausted.");

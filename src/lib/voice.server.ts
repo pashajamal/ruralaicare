@@ -1,19 +1,12 @@
+import { geminiFetch } from "./gemini.server";
 /**
  * Isolated audio service layer: speech-in (via the same multimodal intake call)
  * and speech-out (TTS). Swapping providers only touches this file — the triage
  * pipeline and the deterministic risk scoring are untouched.
  */
 
-const CHAT = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const SPEECH = "https://ai.gateway.lovable.dev/v1/audio/speech";
 const CHAT_MODEL = "google/gemini-2.5-flash";
 const TTS_MODEL = "openai/gpt-4o-mini-tts";
-
-function apiKey(): string {
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("Missing AI credentials");
-  return key;
-}
 
 function mapError(status: number): Error {
   if (status === 429) return new Error("AI rate limit reached. Please retry in a moment.");
@@ -41,10 +34,7 @@ export async function transcribeIntakeAudio(input: {
         ? "the patient's basic medical history"
         : "a spoken health question asked to a clinical assistant";
 
-  const res = await fetch(CHAT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey() },
-    body: JSON.stringify({
+  const res = await geminiFetch("/chat/completions", ({
       model: CHAT_MODEL,
       response_format: { type: "json_object" },
       messages: [
@@ -63,8 +53,7 @@ Return ONLY JSON: {"transcript":string,"detected_language":string}
           ],
         },
       ],
-    }),
-  });
+  }));
 
   if (!res.ok) throw mapError(res.status);
   const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
@@ -90,17 +79,13 @@ Return ONLY JSON: {"transcript":string,"detected_language":string}
 
 /** Text-to-speech. Returns base64 mp3 so the caller can play it on an explicit tap. */
 export async function synthesizeSpeech(text: string, language: string): Promise<string> {
-  const res = await fetch(SPEECH, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey() },
-    body: JSON.stringify({
+  const res = await geminiFetch("/audio/speech", ({
       model: TTS_MODEL,
       voice: "alloy",
       response_format: "mp3",
       input: text,
       instructions: `Read aloud calmly and clearly in ${language}, at a slow pace suitable for a patient in a clinic.`,
-    }),
-  });
+  }));
 
   if (!res.ok) throw mapError(res.status);
   const bytes = new Uint8Array(await res.arrayBuffer());

@@ -1,21 +1,11 @@
+import { geminiFetch } from "./gemini.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 // Lovable AI Gateway equivalent of text-embedding-004, at the 768 dims our vector column uses.
 const EMBED_MODEL = "google/gemini-embedding-001";
 
-function apiKey() {
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("AI embedding is temporarily unavailable");
-  return key;
-}
-
 async function embed(content: string): Promise<number[]> {
-  const res = await fetch(`${GATEWAY}/embeddings`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey()}` },
-    body: JSON.stringify({ model: EMBED_MODEL, input: content, dimensions: 768, encoding_format: "float" }),
-  });
+  const res = await geminiFetch("/embeddings", { model: EMBED_MODEL, input: content, dimensions: 768, encoding_format: "float" });
   if (!res.ok) throw new Error(`Embedding failed (${res.status})`);
   const json = (await res.json()) as { data?: { embedding?: number[] }[] };
   const vec = json.data?.[0]?.embedding;
