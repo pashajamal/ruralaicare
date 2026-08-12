@@ -446,6 +446,14 @@ function ReviewPage() {
             <span className="flex items-center gap-1.5 rounded-full border border-primary/30 bg-secondary px-2.5 py-1 text-[11px] font-semibold text-primary">
               <ShieldCheck className="size-3.5" aria-hidden /> Risk tier calculated by deterministic clinical rules
             </span>
+            {visit.reasoning_provider ? (
+              <span
+                className="rounded-full border border-border bg-muted px-2.5 py-1 font-mono text-[11px] text-muted-foreground"
+                title="Model that produced the symptom-reasoning output"
+              >
+                Reasoning model: {visit.reasoning_provider}
+              </span>
+            ) : null}
           </div>
           <ul className="mt-3 flex flex-wrap gap-2">
             {rules.length === 0 ? (
