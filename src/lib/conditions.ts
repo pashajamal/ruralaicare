@@ -17,7 +17,7 @@ export type ChronicCondition = {
   condition_name: string;
   on_medication: boolean;
   medication_name: string;
-  diagnosed_note?: string;
+  diagnosed_note?: string | undefined;
 };
 
 export const PREGNANCY_STATES = ["Not Pregnant", "Pregnant", "Not Sure"] as const;
@@ -35,7 +35,7 @@ export type PregnancyStatus = {
   status: (typeof PREGNANCY_STATES)[number];
   trimester?: string | null;
   symptoms: string[];
-  other?: string | null;
+  other?: string | null | undefined;
 };
 
 export const SEXES = ["Male", "Female", "Other"] as const;
