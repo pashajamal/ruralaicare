@@ -1054,6 +1054,7 @@ export type Database = {
           id: string
           image_analysis: string | null
           image_url: string | null
+          medicine_suggestion: Json | null
           patient_id: string
           pregnancy_status: Json | null
           preliminary_assessment: string | null
@@ -1089,6 +1090,7 @@ export type Database = {
           id?: string
           image_analysis?: string | null
           image_url?: string | null
+          medicine_suggestion?: Json | null
           patient_id: string
           pregnancy_status?: Json | null
           preliminary_assessment?: string | null
@@ -1124,6 +1126,7 @@ export type Database = {
           id?: string
           image_analysis?: string | null
           image_url?: string | null
+          medicine_suggestion?: Json | null
           patient_id?: string
           pregnancy_status?: Json | null
           preliminary_assessment?: string | null
