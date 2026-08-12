@@ -24,6 +24,7 @@ import { DecisionAudit } from "@/components/DecisionAudit";
 import { MedicineBadge, MedicineMentions } from "@/components/MedicineBadge";
 import { ReferralHospitals } from "@/components/ReferralHospitals";
 import { DocumentViewer } from "@/components/DocumentViewer";
+import { SpeakButton } from "@/components/SpeakButton";
 import { VitalsCards } from "@/components/VitalsCards";
 import { RiskPill, TIER_BLURB, TIER_LABEL, tierClasses, type Tier } from "@/components/risk";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { STATUS_LABEL, formatDateTime, logAudit, notify, safetyGate } from "@/lib/clinic";
 import type { PregnancyStatus } from "@/lib/conditions";
+import { spokenLanguage } from "@/lib/speech";
 import { createCarePlan } from "@/lib/tracker.functions";
 
 export const Route = createFileRoute("/review/$visitId")({
@@ -572,6 +574,19 @@ function ReviewPage() {
             <div className="mt-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-risk-amber">Preliminary assessment</p>
               <p className="mt-1 whitespace-pre-wrap text-sm">{visit.preliminary_assessment ?? "AI assessment unavailable."}</p>
+              {visit.preliminary_assessment ? (
+                <div className="mt-3">
+                  <SpeakButton
+                    text={visit.preliminary_assessment}
+                    language={spokenLanguage(
+                      patient?.preferred_language,
+                      structured ? String(structured['detected_language'] ?? "") : "",
+                    )}
+                    label="Play AI suggestion aloud"
+                    showTranscript={false}
+                  />
+                </div>
+              ) : null}
             </div>
 
             {historyAlerts.length > 0 ? (
@@ -593,9 +608,19 @@ function ReviewPage() {
             ) : null}
 
             {visit.confirmation_message ? (
-              <p className="mt-4 rounded-xl bg-card p-3 text-sm" lang="und">
-                {visit.confirmation_message}
-              </p>
+              <div className="mt-4 space-y-2 rounded-xl bg-card p-3">
+                <p className="text-sm" lang="und">
+                  {visit.confirmation_message}
+                </p>
+                <SpeakButton
+                  text={visit.confirmation_message}
+                  language={spokenLanguage(
+                    patient?.preferred_language,
+                    structured ? String(structured['detected_language'] ?? "") : "",
+                  )}
+                  label="Play for the patient"
+                />
+              </div>
             ) : null}
 
             {!isRed && visit.protocol_text ? (

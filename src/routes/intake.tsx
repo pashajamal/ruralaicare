@@ -18,6 +18,7 @@ import { toast } from "sonner";
 
 import { AppShell, useOnline } from "@/components/AppShell";
 import { ChronicConditionsSection, useConditionsForm } from "@/components/ChronicConditionsSection";
+import { VoiceRecorder } from "@/components/VoiceRecorder";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +32,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { AUTO_DETECT, PATIENT_LANGUAGES } from "@/lib/speech";
 import { submitIntake } from "@/lib/triage.functions";
 import {
   addPending,
@@ -63,7 +65,6 @@ export const Route = createFileRoute("/intake")({
   component: IntakePage,
 });
 
-const LANGUAGES = ["English", "Hindi", "Hinglish"];
 const DRAFT_FIELDS = ["name", "age", "mobile_number", "symptoms", "duration", "history", "temp", "bp", "pulse", "spo2"] as const;
 const PHONE_RE = /^\+?[0-9][0-9\s-]{7,14}$/;
 type SyncState = "empty" | "draft" | "saving" | "synced";
@@ -73,13 +74,17 @@ export function IntakePage() {
   const run = useServerFn(submitIntake);
   const { profile, isDoctor, loading } = useAuth();
   const { online } = useOnline();
-  const [language, setLanguage] = useState("English");
+  const [language, setLanguage] = useState<string>(AUTO_DETECT);
+  const [detected, setDetected] = useState<string | null>(null);
+  const [voiceFilled, setVoiceFilled] = useState<Record<string, boolean>>({});
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [warnings, setWarnings] = useState<VitalWarning[]>([]);
   const [pending, setPending] = useState<PendingIntake[]>([]);
   const [syncing, setSyncing] = useState(false);
   const formRef = useRef<HTMLFormElement | null>(null);
+  const symptomsRef = useRef<HTMLTextAreaElement | null>(null);
+  const historyRef = useRef<HTMLTextAreaElement | null>(null);
   const restoredRef = useRef(false);
   const [syncState, setSyncState] = useState<SyncState>("empty");
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
@@ -141,6 +146,16 @@ export function IntakePage() {
     setDraftSavedAt(null);
     setSyncState("empty");
     setWarnings([]);
+  }
+
+  /** Voice fills the field; the worker still reviews and edits the text before submitting. */
+  function applyTranscript(field: "symptoms" | "history", text: string, detectedLanguage: string) {
+    const el = field === "symptoms" ? symptomsRef.current : historyRef.current;
+    if (!el) return;
+    el.value = el.value.trim() ? `${el.value.trim()} ${text}` : text;
+    setVoiceFilled((prev) => ({ ...prev, [field]: true }));
+    setDetected(detectedLanguage);
+    saveDraft();
   }
 
   function readForm(form: FormData) {
@@ -299,6 +314,29 @@ export function IntakePage() {
           </p>
         </header>
 
+        <section className="mb-5 flex flex-wrap items-end gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
+          <div className="min-w-56 space-y-2">
+            <Label htmlFor="language">Patient / consultation language</Label>
+            <Select value={language} onValueChange={(v) => { setLanguage(v); saveDraft(); }}>
+              <SelectTrigger id="language">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PATIENT_LANGUAGES.map((l) => (
+                  <SelectItem key={l} value={l}>
+                    {l}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <p className="flex-1 text-xs text-muted-foreground">
+            Sets the language spoken back to the patient and hints the AI, while still allowing mixed-language speech.
+            {language === AUTO_DETECT ? " Auto-detect keeps whatever language the AI detects on the record." : null}
+            {detected ? <span className="ml-1 font-medium text-foreground">Detected: {detected}.</span> : null}
+          </p>
+        </section>
+
         {!online ? (
           <div className="mb-5 flex items-start gap-3 rounded-2xl border border-risk-amber/30 bg-risk-amber-soft p-4 text-sm text-risk-amber">
             <CloudOff className="mt-0.5 size-4" aria-hidden />
@@ -386,21 +424,6 @@ export function IntakePage() {
                 <Label htmlFor="age">Age</Label>
                 <Input id="age" name="age" type="number" min={0} max={120} required placeholder="Years" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="language">Preferred language</Label>
-                <Select value={language} onValueChange={setLanguage}>
-                  <SelectTrigger id="language">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LANGUAGES.map((l) => (
-                      <SelectItem key={l} value={l}>
-                        {l}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
           </section>
 
@@ -410,22 +433,53 @@ export function IntakePage() {
             </h2>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="symptoms">Symptoms description</Label>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Label htmlFor="symptoms">Symptoms description</Label>
+                  <VoiceRecorder
+                    field="symptoms"
+                    languageHint={language}
+                    onTranscript={(text, lang) => applyTranscript("symptoms", text, lang)}
+                  />
+                </div>
                 <Textarea
                   id="symptoms"
                   name="symptoms"
+                  ref={symptomsRef}
                   required
                   rows={5}
                   placeholder="Write in any language the health worker is comfortable with."
                 />
+                {voiceFilled['symptoms'] ? (
+                  <p className="text-xs text-risk-amber">
+                    Transcribed from voice — please read it back and correct any misheard words before submitting.
+                  </p>
+                ) : null}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="duration">Duration of symptoms</Label>
                 <Input id="duration" name="duration" placeholder="e.g. 3 days" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="history">Basic medical history</Label>
-                <Textarea id="history" name="history" rows={3} placeholder="Chronic conditions, medicines, allergies" />
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Label htmlFor="history">Basic medical history</Label>
+                  <VoiceRecorder
+                    field="history"
+                    languageHint={language}
+                    onTranscript={(text, lang) => applyTranscript("history", text, lang)}
+                  />
+                </div>
+                <Textarea
+                  id="history"
+                  name="history"
+                  ref={historyRef}
+                  rows={3}
+                  placeholder="Chronic conditions, medicines, allergies"
+                />
+                {voiceFilled['history'] ? (
+                  <p className="text-xs text-risk-amber">
+                    Transcribed from voice — please read it back and correct any misheard words before submitting.
+                  </p>
+                ) : null}
               </div>
             </div>
           </section>
