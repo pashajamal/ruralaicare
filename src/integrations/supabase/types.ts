@@ -824,6 +824,30 @@ export type Database = {
           },
         ]
       }
+      staging_symptom_disease: {
+        Row: {
+          created_at: string
+          disease_label: string
+          id: string
+          processed: boolean
+          symptom_text: string
+        }
+        Insert: {
+          created_at?: string
+          disease_label: string
+          id?: string
+          processed?: boolean
+          symptom_text: string
+        }
+        Update: {
+          created_at?: string
+          disease_label?: string
+          id?: string
+          processed?: boolean
+          symptom_text?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
