@@ -462,12 +462,18 @@ export function scoreRisk(structured: StructuredSummary, symptomsText: string): 
       rules.push(`Blood pressure ${v.bp} — elevated (sys ≥ 140 or dia ≥ 90)`);
     }
   }
-  for (const flag of ["vomiting", "dehydration", "blood", "severe", "persistent"]) {
+  for (const flag of ["vomiting", "dehydration", "blood", "severe"]) {
     if (text.includes(flag)) rules.push(`Moderate-severity indicator: "${flag}"`);
   }
   if (rules.length > 0) return { tier: "YELLOW", rules };
 
-  return { tier: "GREEN", rules: ["No red-flag vitals or symptoms detected; vitals within safe ranges"] };
+  const greenRules = ["No red-flag vitals or symptoms detected; vitals within safe ranges"];
+  if (prolonged) {
+    greenRules.push(
+      `Symptoms present ${durationDays} days, but no fever, no reported worsening and vitals normal — duration alone does not raise the tier`,
+    );
+  }
+  return { tier: "GREEN", rules: greenRules };
 }
 
 function extractDays(duration: string): number | null {
