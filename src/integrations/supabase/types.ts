@@ -824,6 +824,39 @@ export type Database = {
           },
         ]
       }
+      staging_prescription_images: {
+        Row: {
+          created_at: string
+          dosage: string | null
+          id: string
+          image_filename: string
+          medication_details: string | null
+          patient_name: string | null
+          processed: boolean
+          raw_ocr_text: string | null
+        }
+        Insert: {
+          created_at?: string
+          dosage?: string | null
+          id?: string
+          image_filename: string
+          medication_details?: string | null
+          patient_name?: string | null
+          processed?: boolean
+          raw_ocr_text?: string | null
+        }
+        Update: {
+          created_at?: string
+          dosage?: string | null
+          id?: string
+          image_filename?: string
+          medication_details?: string | null
+          patient_name?: string | null
+          processed?: boolean
+          raw_ocr_text?: string | null
+        }
+        Relationships: []
+      }
       staging_symptom_disease: {
         Row: {
           created_at: string
