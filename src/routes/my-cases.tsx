@@ -5,6 +5,7 @@ import { ClipboardPlus, Loader2, Search } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
 import { RiskPill } from "@/components/risk";
+import { CaseFilterChips, matchesPatient, type CaseFilter } from "@/components/CaseFilters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +37,7 @@ function MyCasesPage() {
   const { session } = useAuth();
   const userId = session?.user?.id;
   const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<CaseFilter>("All");
 
   const { data, isLoading } = useQuery({
     enabled: Boolean(userId),
@@ -57,11 +59,9 @@ function MyCasesPage() {
     return (data ?? []).filter((v) => {
       const p = v.patients as { name?: string; mobile_number?: string | null } | null;
       const phone = (p?.mobile_number ?? "").replace(/\D/g, "");
-      const matches =
-        !term ||
-        (p?.name ?? "").toLowerCase().includes(term) ||
-        (digits.length >= 3 && phone.includes(digits));
-      if (!matches) return false;
+      void digits;
+      void phone;
+      if (!matchesPatient(term, p?.name, p?.mobile_number)) return false;
       if (filter === "Pending") return v.status !== "finalized";
       if (filter === "Finalized") return v.status === "finalized";
       if (filter !== "All") return v.risk_tier === filter.toUpperCase();
@@ -86,15 +86,18 @@ function MyCasesPage() {
           </Button>
         </header>
 
-        <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search patient name"
-            aria-label="Search patient name"
-            className="pl-9"
-          />
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative min-w-64 max-w-sm flex-1">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search patient name or mobile number"
+              aria-label="Search patient name or mobile number"
+              className="pl-9"
+            />
+          </div>
+          <CaseFilterChips value={filter} onChange={setFilter} />
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
