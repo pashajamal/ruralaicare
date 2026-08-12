@@ -109,6 +109,7 @@ export function IntakePage() {
       if (el && draft.values[field]) el.value = draft.values[field];
     }
     if (draft.language) setLanguage(draft.language);
+    if (draft.values['mobile_number']) setMobile(draft.values['mobile_number']);
     setDraftSavedAt(draft.savedAt);
     setSyncState("draft");
   }
