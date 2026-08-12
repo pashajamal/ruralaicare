@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState, type FormEvent } from "react";
-import { AlertTriangle, CloudOff, ImageUp, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
+import { AlertTriangle, CloudOff, ImageUp, Loader2, RefreshCw, Sparkles, Stethoscope, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell, useOnline } from "@/components/AppShell";
