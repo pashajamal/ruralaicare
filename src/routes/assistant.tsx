@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { askAssistant } from "@/lib/assistant.functions";
 import { useAuth } from "@/lib/auth";
+import { assistantCopy } from "@/lib/assistant-i18n";
 import { AUTO_DETECT, PATIENT_LANGUAGES } from "@/lib/speech";
 
 export const Route = createFileRoute("/assistant")({
@@ -35,16 +36,6 @@ export const Route = createFileRoute("/assistant")({
 
 type Msg = { role: "user" | "assistant"; text: string };
 
-const WORKER_PROMPTS = [
-  "How do I clean and dress a minor wound?",
-  "What are the danger signs in a child with fever?",
-  "How should ORS be prepared and given?",
-];
-const DOCTOR_PROMPTS = [
-  "Summarize current first-line management of dehydration.",
-  "What are red-flag features of chest pain?",
-  "Key counselling points for a newly diagnosed diabetic.",
-];
 
 function AssistantPage() {
   const { isDoctor } = useAuth();
@@ -55,6 +46,7 @@ function AssistantPage() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [busy, setBusy] = useState(false);
   const ask = useServerFn(askAssistant);
+  const copy = assistantCopy(language);
 
   async function send(text: string) {
     if (!text.trim()) return;
@@ -82,17 +74,14 @@ function AssistantPage() {
       <div className="mx-auto max-w-3xl space-y-5 pb-8">
         <header>
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            <Bot className="size-6 text-primary" aria-hidden /> AI assistant
+            <Bot className="size-6 text-primary" aria-hidden /> {copy.title}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Ask general health questions, or pick a patient to scope answers to that case. It never diagnoses and cannot
-            change a risk tier, a decision or a note.
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{copy.intro}</p>
         </header>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="assistant-language">Answer language</Label>
+            <Label htmlFor="assistant-language">{copy.languageLabel}</Label>
             <select
               id="assistant-language"
               value={language}
@@ -110,12 +99,12 @@ function AssistantPage() {
             value={patientId}
             onChange={setPatientId}
             patients={patients ?? []}
-            label="Patient case (optional)"
+            label={copy.patientLabel}
           />
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {(isDoctor ? DOCTOR_PROMPTS : WORKER_PROMPTS).map((p) => (
+          {(isDoctor ? copy.doctorPrompts : copy.workerPrompts).map((p) => (
             <Button key={p} size="sm" variant="outline" disabled={busy} onClick={() => void send(p)}>
               <Sparkles className="size-3.5" aria-hidden /> {p}
             </Button>
@@ -124,10 +113,7 @@ function AssistantPage() {
 
         <section className="min-h-64 space-y-3 rounded-2xl border border-border bg-card p-5 shadow-sm">
           {messages.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Ask any general health question, or select a patient to get answers grounded in that case record. Tap the
-              mic to ask by voice, and "Listen" to hear the answer in your language.
-            </p>
+            <p className="text-sm text-muted-foreground">{copy.empty}</p>
           ) : (
             messages.map((m, i) => (
               <div
@@ -140,14 +126,14 @@ function AssistantPage() {
               >
                 <p className="whitespace-pre-wrap">{m.text}</p>
                 {m.role === "assistant" ? (
-                  <SpeakButton text={m.text} language={language} label="Listen" showTranscript={false} />
+                  <SpeakButton text={m.text} language={language} label={copy.listen} showTranscript={false} />
                 ) : null}
               </div>
             ))
           )}
           {busy ? (
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" aria-hidden /> Reading the case record…
+              <Loader2 className="size-4 animate-spin" aria-hidden /> {copy.thinking}
             </p>
           ) : null}
         </section>
@@ -157,8 +143,8 @@ function AssistantPage() {
             rows={2}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Ask a health question, or about the selected patient…"
-            aria-label="Question"
+            placeholder={copy.placeholder}
+            aria-label={copy.questionLabel}
           />
           <VoiceRecorder
             field="question"
@@ -166,7 +152,7 @@ function AssistantPage() {
             onTranscript={(text) => setQuestion((q) => (q ? `${q} ${text}` : text))}
           />
           <Button onClick={() => void send(question)} disabled={busy || !question.trim()}>
-            <Send className="size-4" aria-hidden /> Ask
+            <Send className="size-4" aria-hidden /> {copy.ask}
           </Button>
         </div>
       </div>
