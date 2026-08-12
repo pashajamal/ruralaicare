@@ -12,7 +12,7 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "predeploy": "npm run build",
+    "predeploy": "npm run build && node scripts/prepare-gh-pages.js",
     "deploy": "gh-pages -d .output/public"
   },
   "dependencies": {
