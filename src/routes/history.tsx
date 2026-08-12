@@ -40,7 +40,7 @@ function HistoryPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("visits")
-        .select("*, patients(id, name, age)")
+        .select("*, patients(id, name, age, mobile_number)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -50,10 +50,13 @@ function HistoryPage() {
   const rows = useMemo(() => {
     const term = search.trim().toLowerCase();
     return (data ?? []).filter((v) => {
-      const patient = v.patients as { id?: string; name?: string } | null;
+      const patient = v.patients as { id?: string; name?: string; mobile_number?: string | null } | null;
+      const digits = term.replace(/\D/g, "");
+      const phone = (patient?.mobile_number ?? "").replace(/\D/g, "");
       const matches =
         !term ||
         (patient?.name ?? "").toLowerCase().includes(term) ||
+        (digits.length >= 3 && phone.includes(digits)) ||
         v.id.toLowerCase().startsWith(term) ||
         (patient?.id ?? "").toLowerCase().startsWith(term);
       if (!matches) return false;
@@ -71,7 +74,8 @@ function HistoryPage() {
         <header>
           <h1 className="text-2xl font-semibold tracking-tight">Patient History</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Search by patient name, patient ID or visit ID. Open any record for the full clinical review.
+            Search by patient name, mobile number, patient ID or visit ID. A mobile number pulls up that patient's full
+            history across every past visit. Open any record for the full clinical review.
           </p>
         </header>
 
@@ -81,7 +85,7 @@ function HistoryPage() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Patient name, patient ID or visit ID"
+              placeholder="Patient name, mobile number, patient ID or visit ID"
               className="pl-9"
               aria-label="Search visits"
             />

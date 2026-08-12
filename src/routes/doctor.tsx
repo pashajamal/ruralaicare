@@ -1,13 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { AlertTriangle, Loader2, Stethoscope } from "lucide-react";
+import { AlertTriangle, Loader2, Search, Stethoscope, Zap } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
 import { DueReminders } from "@/components/DueReminders";
+import { CaseFilterChips, matchesPatient, type CaseFilter } from "@/components/CaseFilters";
 import { RiskPill } from "@/components/risk";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { CONSULT_STATUS_LABEL, TIER_ORDER, logAudit, notify, waitingSince } from "@/lib/clinic";
@@ -31,6 +33,8 @@ function DoctorPage() {
   const { profile, role, isDoctor } = useAuth();
   const qc = useQueryClient();
   const [busy, setBusy] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<CaseFilter>("All");
 
   const { data, isLoading } = useQuery({
     queryKey: ["doctor-workspace"],
@@ -38,7 +42,7 @@ function DoctorPage() {
       const [visits, consults] = await Promise.all([
         supabase
           .from("visits")
-          .select("id, patient_id, risk_tier, status, created_at, emergency_acknowledged, patients(name, age)")
+          .select("id, patient_id, risk_tier, status, created_at, emergency_acknowledged, patients(name, age, mobile_number)")
           .neq("status", "finalized")
           .order("created_at", { ascending: true }),
         supabase.from("consultations").select("*").neq("status", "completed"),
@@ -49,13 +53,30 @@ function DoctorPage() {
     refetchInterval: 30000,
   });
 
-  const visits = [...(data?.visits ?? [])].sort((a, b) => {
-    const t = (TIER_ORDER[a.risk_tier ?? "GREEN"] ?? 3) - (TIER_ORDER[b.risk_tier ?? "GREEN"] ?? 3);
-    return t !== 0 ? t : new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-  });
-  const red = visits.filter((v) => v.risk_tier === "RED");
-  const others = visits.filter((v) => v.risk_tier !== "RED");
   const consults = data?.consults ?? [];
+  const urgentVisitIds = new Set(
+    consults.filter((c) => c.urgent_flag && c.status !== "completed" && c.visit_id).map((c) => c.visit_id as string),
+  );
+
+  const visits = [...(data?.visits ?? [])]
+    .filter((v) => {
+      const p = v.patients as { name?: string; mobile_number?: string | null } | null;
+      if (!matchesPatient(search, p?.name, p?.mobile_number)) return false;
+      if (filter === "Pending") return v.status !== "finalized";
+      if (filter === "Finalized") return v.status === "finalized";
+      if (filter !== "All") return v.risk_tier === filter.toUpperCase();
+      return true;
+    })
+    .sort((a, b) => {
+      // Urgent doctor-consult requests are pinned above everything, including RED cases.
+      const u = Number(urgentVisitIds.has(b.id)) - Number(urgentVisitIds.has(a.id));
+      if (u !== 0) return u;
+      const t = (TIER_ORDER[a.risk_tier ?? "GREEN"] ?? 3) - (TIER_ORDER[b.risk_tier ?? "GREEN"] ?? 3);
+      return t !== 0 ? t : new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    });
+  const urgent = visits.filter((v) => urgentVisitIds.has(v.id));
+  const red = visits.filter((v) => v.risk_tier === "RED" && !urgentVisitIds.has(v.id));
+  const others = visits.filter((v) => v.risk_tier !== "RED" && !urgentVisitIds.has(v.id));
 
   async function setConsultStatus(id: string, status: "waiting" | "in_consultation" | "completed") {
     setBusy(id);
@@ -101,6 +122,56 @@ function DoctorPage() {
               : "Read-only view for health workers — only a doctor can finalize a case."}
           </p>
         </header>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative min-w-64 max-w-sm flex-1">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search patient name or mobile number"
+              aria-label="Search patient name or mobile number"
+              className="pl-9"
+            />
+          </div>
+          <CaseFilterChips value={filter} onChange={setFilter} />
+        </div>
+
+        {urgent.length > 0 ? (
+          <section>
+            <h2 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-risk-red">
+              <Zap className="size-4" aria-hidden /> Urgent consult requests ({urgent.length})
+            </h2>
+            <ul className="grid gap-3 md:grid-cols-2">
+              {urgent.map((v) => {
+                const patient = v.patients as { name?: string; age?: number } | null;
+                return (
+                  <li key={v.id} className="rounded-2xl border-2 border-risk-red bg-risk-red-soft p-5 shadow-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-risk-red">{patient?.name ?? "—"}</p>
+                        <p className="text-xs text-risk-red/80">
+                          {patient?.age ?? "—"} yrs · waiting {waitingSince(v.created_at)}
+                        </p>
+                      </div>
+                      <span className="flex items-center gap-1.5 rounded-full bg-risk-red px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
+                        <span className="inline-block size-2 animate-pulse rounded-full bg-white" aria-hidden /> Urgent
+                      </span>
+                    </div>
+                    <p className="mt-3 text-xs text-risk-red">
+                      Fast-track requested by the health worker — chat and call are already open on the case.
+                    </p>
+                    <Button asChild size="sm" variant="destructive" className="mt-3 w-full">
+                      <Link to="/review/$visitId" params={{ visitId: v.id }}>
+                        Connect now
+                      </Link>
+                    </Button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ) : null}
 
         <section>
           <h2 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-risk-red">

@@ -5,6 +5,7 @@ import { z } from "zod";
 const IntakeSchema = z.object({
   name: z.string().min(1),
   age: z.coerce.number().int().min(0).max(120),
+  mobile_number: z.string().min(6).max(20),
   preferred_language: z.string().min(1),
   symptoms: z.string().min(1),
   duration: z.string().default(""),

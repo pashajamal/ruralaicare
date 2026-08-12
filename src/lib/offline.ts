@@ -6,6 +6,7 @@ export type PendingIntake = {
   savedAt: string;
   name: string;
   age: number;
+  mobile_number: string;
   preferred_language: string;
   symptoms: string;
   duration: string;

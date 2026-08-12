@@ -4,6 +4,7 @@ import { specialtyFor } from "./specialty";
 import {
   analyzeImage,
   fetchDrugSafety,
+  lookupAyurvedic,
   lookupProtocol,
   reasonAssessment,
   scoreRisk,
@@ -16,6 +17,7 @@ import {
 export type IntakeInput = {
   name: string;
   age: number;
+  mobile_number: string;
   preferred_language: string;
   symptoms: string;
   duration: string;
@@ -55,19 +57,39 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
   const centre = profile?.health_centre ?? "Rampur Health Centre";
   const workerName = profile?.full_name || "Health worker";
 
-  // 1. Persist patient + visit immediately (status: pending_review)
-  const { data: patient, error: patientError } = await supabaseAdmin
+  // 1. Persist patient + visit immediately (status: pending_review).
+  // Mobile number is the lookup key: an existing patient is reused across visits.
+  const mobile = input.mobile_number.trim();
+  const { data: existing } = await supabaseAdmin
     .from("patients")
-    .insert({
-      name: input.name,
-      age: input.age,
-      preferred_language: input.preferred_language,
-      health_centre: centre,
-      created_by: userId,
-    })
     .select("id")
-    .single();
-  if (patientError || !patient) throw new Error("Could not save patient record");
+    .eq("mobile_number", mobile)
+    .eq("health_centre", centre)
+    .maybeSingle();
+
+  let patient = existing;
+  if (patient) {
+    await supabaseAdmin
+      .from("patients")
+      .update({ name: input.name, age: input.age, preferred_language: input.preferred_language })
+      .eq("id", patient.id);
+  } else {
+    const { data: created, error: patientError } = await supabaseAdmin
+      .from("patients")
+      .insert({
+        name: input.name,
+        age: input.age,
+        mobile_number: mobile,
+        contact: mobile,
+        preferred_language: input.preferred_language,
+        health_centre: centre,
+        created_by: userId,
+      })
+      .select("id")
+      .single();
+    if (patientError || !created) throw new Error("Could not save patient record");
+    patient = created;
+  }
 
   const { data: visit, error: visitError } = await supabaseAdmin
     .from("visits")
@@ -150,6 +172,7 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
   // 4 + 5. GREEN only: fixed protocol lookup + OpenFDA drug safety. RED hard-stops.
   let protocolText: string | null = null;
   let drugSafety: DrugSafety | null = null;
+  let ayurvedic: { condition_name: string; remedy_text: string; source_reference: string | null } | null = null;
   if (risk.tier === "GREEN") {
     try {
       const protocol = await lookupProtocol(structured, input.symptoms);
@@ -159,6 +182,11 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
       }
     } catch (error) {
       console.error("protocol/drug lookup failed", error);
+    }
+    try {
+      ayurvedic = await lookupAyurvedic(structured, input.symptoms);
+    } catch (error) {
+      console.error("ayurvedic lookup failed", error);
     }
   }
 
@@ -174,6 +202,9 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
       triggering_rules: risk.rules,
       protocol_text: protocolText,
       drug_safety_info: drugSafety as unknown as Json,
+      ayurvedic_condition: ayurvedic?.condition_name ?? null,
+      ayurvedic_remedy: ayurvedic?.remedy_text ?? null,
+      ayurvedic_source: ayurvedic?.source_reference ?? null,
       hospital_specialty_tag: specialtyFor(`${input.symptoms} ${structured.symptoms.join(" ")} ${assessment ?? ""}`),
       ai_status: aiStatus,
       referral_required: risk.tier === "RED",

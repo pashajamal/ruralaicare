@@ -68,6 +68,33 @@ export type Database = {
           },
         ]
       }
+      ayurvedic_protocols: {
+        Row: {
+          condition_name: string
+          created_at: string
+          id: string
+          keywords: string[]
+          remedy_text: string
+          source_reference: string | null
+        }
+        Insert: {
+          condition_name: string
+          created_at?: string
+          id?: string
+          keywords?: string[]
+          remedy_text: string
+          source_reference?: string | null
+        }
+        Update: {
+          condition_name?: string
+          created_at?: string
+          id?: string
+          keywords?: string[]
+          remedy_text?: string
+          source_reference?: string | null
+        }
+        Relationships: []
+      }
       care_plans: {
         Row: {
           created_at: string
@@ -136,45 +163,57 @@ export type Database = {
           assigned_doctor: string | null
           completed_at: string | null
           created_at: string
+          ended_at: string | null
           health_centre: string
           health_worker_id: string | null
           id: string
+          initiated_by: string | null
           notes: string | null
           patient_id: string
           priority: string
           started_at: string | null
           status: string
+          type: string
           updated_at: string
+          urgent_flag: boolean
           visit_id: string
         }
         Insert: {
           assigned_doctor?: string | null
           completed_at?: string | null
           created_at?: string
+          ended_at?: string | null
           health_centre?: string
           health_worker_id?: string | null
           id?: string
+          initiated_by?: string | null
           notes?: string | null
           patient_id: string
           priority?: string
           started_at?: string | null
           status?: string
+          type?: string
           updated_at?: string
+          urgent_flag?: boolean
           visit_id: string
         }
         Update: {
           assigned_doctor?: string | null
           completed_at?: string | null
           created_at?: string
+          ended_at?: string | null
           health_centre?: string
           health_worker_id?: string | null
           id?: string
+          initiated_by?: string | null
           notes?: string | null
           patient_id?: string
           priority?: string
           started_at?: string | null
           status?: string
+          type?: string
           updated_at?: string
+          urgent_flag?: boolean
           visit_id?: string
         }
         Relationships: [
@@ -448,6 +487,36 @@ export type Database = {
         }
         Relationships: []
       }
+      medicine_inventory: {
+        Row: {
+          created_at: string
+          expiry_date: string | null
+          health_centre: string
+          id: string
+          medicine_name: string
+          quantity: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expiry_date?: string | null
+          health_centre?: string
+          id?: string
+          medicine_name: string
+          quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expiry_date?: string | null
+          health_centre?: string
+          id?: string
+          medicine_name?: string
+          quantity?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           audience: string
@@ -504,6 +573,7 @@ export type Database = {
           health_centre: string
           id: string
           location: string | null
+          mobile_number: string
           name: string
           preferred_language: string
         }
@@ -515,6 +585,7 @@ export type Database = {
           health_centre?: string
           id?: string
           location?: string | null
+          mobile_number: string
           name: string
           preferred_language?: string
         }
@@ -526,6 +597,7 @@ export type Database = {
           health_centre?: string
           id?: string
           location?: string | null
+          mobile_number?: string
           name?: string
           preferred_language?: string
         }
@@ -699,10 +771,64 @@ export type Database = {
         }
         Relationships: []
       }
+      visit_messages: {
+        Row: {
+          body: string
+          consultation_id: string | null
+          created_at: string
+          health_centre: string
+          id: string
+          sender_id: string | null
+          sender_name: string
+          sender_role: string
+          visit_id: string
+        }
+        Insert: {
+          body: string
+          consultation_id?: string | null
+          created_at?: string
+          health_centre: string
+          id?: string
+          sender_id?: string | null
+          sender_name: string
+          sender_role: string
+          visit_id: string
+        }
+        Update: {
+          body?: string
+          consultation_id?: string | null
+          created_at?: string
+          health_centre?: string
+          id?: string
+          sender_id?: string | null
+          sender_name?: string
+          sender_role?: string
+          visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visit_messages_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visit_messages_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       visits: {
         Row: {
           ai_status: string
           assigned_doctor: string | null
+          ayurvedic_condition: string | null
+          ayurvedic_remedy: string | null
+          ayurvedic_source: string | null
           confirmation_message: string | null
           created_at: string
           created_by: string | null
@@ -733,6 +859,9 @@ export type Database = {
         Insert: {
           ai_status?: string
           assigned_doctor?: string | null
+          ayurvedic_condition?: string | null
+          ayurvedic_remedy?: string | null
+          ayurvedic_source?: string | null
           confirmation_message?: string | null
           created_at?: string
           created_by?: string | null
@@ -763,6 +892,9 @@ export type Database = {
         Update: {
           ai_status?: string
           assigned_doctor?: string | null
+          ayurvedic_condition?: string | null
+          ayurvedic_remedy?: string | null
+          ayurvedic_source?: string | null
           confirmation_message?: string | null
           created_at?: string
           created_by?: string | null

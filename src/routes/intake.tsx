@@ -63,7 +63,8 @@ export const Route = createFileRoute("/intake")({
 });
 
 const LANGUAGES = ["English", "Hindi", "Bangla", "Arabic"];
-const DRAFT_FIELDS = ["name", "age", "symptoms", "duration", "history", "temp", "bp", "pulse", "spo2"] as const;
+const DRAFT_FIELDS = ["name", "age", "mobile_number", "symptoms", "duration", "history", "temp", "bp", "pulse", "spo2"] as const;
+const PHONE_RE = /^\+?[0-9][0-9\s-]{7,14}$/;
 type SyncState = "empty" | "draft" | "saving" | "synced";
 
 export function IntakePage() {
@@ -147,6 +148,7 @@ export function IntakePage() {
     return {
       name: String(form.get("name") ?? "").trim(),
       age: Number(form.get("age") ?? 0),
+      mobile_number: String(form.get("mobile_number") ?? "").trim(),
       symptoms: String(form.get("symptoms") ?? "").trim(),
       duration: String(form.get("duration") ?? "").trim(),
       history: String(form.get("history") ?? "").trim(),
@@ -172,6 +174,11 @@ export function IntakePage() {
     const values = readForm(form);
     const found = validateVitals({ ...values.vitals, age: values.age });
     setWarnings(found);
+
+    if (!PHONE_RE.test(values.mobile_number)) {
+      toast.error("Enter a valid mobile number (8–15 digits, optional +country code).");
+      return;
+    }
 
     if (!navigator.onLine) {
       const emergency = offlineEmergencyCheck({
@@ -230,6 +237,7 @@ export function IntakePage() {
           data: {
             name: item.name,
             age: item.age,
+            mobile_number: item.mobile_number,
             preferred_language: item.preferred_language,
             symptoms: item.symptoms,
             duration: item.duration,
@@ -338,10 +346,28 @@ export function IntakePage() {
             <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Patient details
             </h2>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="name">Patient name</Label>
                 <Input id="name" name="name" required placeholder="Full name" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="mobile_number">
+                  Mobile number <span className="text-risk-red">*</span>
+                </Label>
+                <Input
+                  id="mobile_number"
+                  name="mobile_number"
+                  type="tel"
+                  required
+                  inputMode="tel"
+                  pattern="\+?[0-9][0-9\s\-]{7,14}"
+                  title="8–15 digits, optional + country code"
+                  placeholder="+91 98765 43210"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Used to find this patient's past visits, care plans and consultations.
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="age">Age</Label>

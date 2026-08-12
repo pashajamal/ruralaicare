@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   ArrowDown,
   CheckCircle2,
+  Leaf,
   Loader2,
   Printer,
   ShieldCheck,
@@ -16,7 +17,9 @@ import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
 import { AuditTimeline } from "@/components/AuditTimeline";
+import { CaseConsultBar } from "@/components/CaseConsultBar";
 import { DecisionAudit } from "@/components/DecisionAudit";
+import { MedicineBadge, MedicineMentions } from "@/components/MedicineBadge";
 import { ReferralHospitals } from "@/components/ReferralHospitals";
 import { DocumentViewer } from "@/components/DocumentViewer";
 import { VitalsCards } from "@/components/VitalsCards";
@@ -79,7 +82,7 @@ function ReviewPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("visits")
-        .select("*, patients(id, name, age, preferred_language, contact, location, health_centre)")
+        .select("*, patients(id, name, age, preferred_language, contact, mobile_number, location, health_centre)")
         .eq("id", visitId)
         .maybeSingle();
       if (error) throw error;
@@ -104,7 +107,7 @@ function ReviewPage() {
   });
 
   const patient = (visit?.patients ?? null) as
-    | { id: string; name: string; age: number; preferred_language: string; contact: string | null; location: string | null; health_centre: string | null }
+    | { id: string; name: string; age: number; preferred_language: string; contact: string | null; mobile_number: string | null; location: string | null; health_centre: string | null }
     | null;
   const tier = (visit?.risk_tier ?? "YELLOW") as Tier;
   const rules = Array.isArray(visit?.triggering_rules) ? (visit.triggering_rules as string[]) : [];
@@ -360,6 +363,7 @@ function ReviewPage() {
               Visit ID {visit.id.slice(0, 8)} · {formatDateTime(visit.created_at)} · Status{" "}
               <b>{STATUS_LABEL[visit.status] ?? visit.status}</b>
               {patient?.health_centre ? ` · ${patient.health_centre}` : ""}
+              {patient?.mobile_number ? ` · ${patient.mobile_number}` : ""}
             </p>
           </div>
           <div className="flex gap-2">
@@ -370,6 +374,16 @@ function ReviewPage() {
             </Button>
           </div>
         </header>
+
+        {patient ? (
+          <CaseConsultBar
+            visitId={visit.id}
+            patientId={patient.id}
+            patientName={patient.name}
+            visitCentre={visit.health_centre}
+            tier={tier}
+          />
+        ) : null}
 
         {visit.ai_status === "unavailable" ? (
           <p className="rounded-2xl border border-risk-amber/30 bg-risk-amber-soft p-4 text-sm font-medium text-risk-amber">
@@ -570,6 +584,24 @@ function ReviewPage() {
                       <li key={line}>{line.replace(/^\d+[.)]\s*/, "")}</li>
                     ))}
                 </ol>
+                <MedicineMentions text={visit.protocol_text} />
+              </div>
+            ) : null}
+
+            {!isRed && visit.ayurvedic_remedy ? (
+              <div className="mt-4 rounded-xl border border-risk-green/30 bg-card p-4">
+                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-risk-green">
+                  <Leaf className="size-3.5" aria-hidden /> Ayurvedic / home remedy suggestion (complementary — not a
+                  substitute for treatment)
+                </p>
+                {visit.ayurvedic_condition ? (
+                  <p className="mt-2 text-sm font-medium">{visit.ayurvedic_condition}</p>
+                ) : null}
+                <p className="mt-1 whitespace-pre-wrap text-sm">{visit.ayurvedic_remedy}</p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  From the clinic's fixed remedy library{visit.ayurvedic_source ? ` · ${visit.ayurvedic_source}` : ""} — not
+                  AI-written. Always follow the doctor's decision.
+                </p>
               </div>
             ) : null}
 
@@ -577,6 +609,7 @@ function ReviewPage() {
               <div className="mt-4 rounded-xl bg-card p-4 text-sm">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Drug safety note — {drug.medicine}
+                  {drug.medicine ? <MedicineBadge medicine={drug.medicine} /> : null}
                 </p>
                 <ul className="mt-2 list-disc space-y-1 pl-5">
                   {(drug.warnings ?? []).map((w) => (
