@@ -22,6 +22,9 @@ const EN: Dict = {
   referrals: "Referrals",
   followups: "Follow-ups",
   settings: "Settings",
+  grpCases: "Cases",
+  grpCare: "Care & follow-up",
+  grpTools: "Tools & resources",
   signOut: "Sign out",
   positioning: "AI helps organize and prioritize. Doctors make the decision.",
   trust: "AI assistance ≠ medical decision",
@@ -52,6 +55,9 @@ const DICTS: Record<UiLanguage, Dict> = {
     signOut: "साइन आउट",
     positioning: "AI व्यवस्थित और प्राथमिकता तय करने में मदद करता है। निर्णय डॉक्टर लेते हैं।",
     trust: "AI सहायता ≠ चिकित्सा निर्णय",
+    grpCases: "केस",
+    grpCare: "देखभाल और फॉलो-अप",
+    grpTools: "उपकरण और संसाधन",
   },
   Bangla: {
     ...EN,
@@ -76,6 +82,9 @@ const DICTS: Record<UiLanguage, Dict> = {
     signOut: "সাইন আউট",
     positioning: "AI সাজাতে ও অগ্রাধিকার দিতে সাহায্য করে। সিদ্ধান্ত নেন ডাক্তার।",
     trust: "AI সহায়তা ≠ চিকিৎসা সিদ্ধান্ত",
+    grpCases: "কেস",
+    grpCare: "যত্ন ও ফলো-আপ",
+    grpTools: "সরঞ্জাম ও রিসোর্স",
   },
   Arabic: {
     ...EN,
@@ -99,6 +108,9 @@ const DICTS: Record<UiLanguage, Dict> = {
     signOut: "تسجيل الخروج",
     positioning: "الذكاء الاصطناعي ينظّم ويرتّب الأولويات. القرار للطبيب.",
     trust: "مساعدة الذكاء الاصطناعي ≠ قرار طبي",
+    grpCases: "الحالات",
+    grpCare: "الرعاية والمتابعة",
+    grpTools: "الأدوات والموارد",
   },
 };
 
