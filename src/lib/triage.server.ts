@@ -231,12 +231,12 @@ export async function lookupProtocol(structured: StructuredSummary, symptomsText
 
 export type DrugSafety = {
   medicine: string;
-  contraindications?: string;
-  pediatric_use?: string;
-  geriatric_use?: string;
-  warnings?: string;
+  contraindications?: string | undefined;
+  pediatric_use?: string | undefined;
+  geriatric_use?: string | undefined;
+  warnings?: string | undefined;
   source: string;
-  note?: string;
+  note?: string | undefined;
 };
 
 export async function fetchDrugSafety(medicine: string): Promise<DrugSafety | null> {
