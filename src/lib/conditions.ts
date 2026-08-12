@@ -33,7 +33,7 @@ export const PREGNANCY_SYMPTOMS = [
 
 export type PregnancyStatus = {
   status: (typeof PREGNANCY_STATES)[number];
-  trimester?: string | null;
+  trimester?: string | null | undefined;
   symptoms: string[];
   other?: string | null | undefined;
 };
