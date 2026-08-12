@@ -14,7 +14,131 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      first_aid_protocols: {
+        Row: {
+          condition_name: string
+          created_at: string
+          id: string
+          keywords: string[]
+          otc_medicine: string | null
+          protocol_text: string
+        }
+        Insert: {
+          condition_name: string
+          created_at?: string
+          id?: string
+          keywords?: string[]
+          otc_medicine?: string | null
+          protocol_text: string
+        }
+        Update: {
+          condition_name?: string
+          created_at?: string
+          id?: string
+          keywords?: string[]
+          otc_medicine?: string | null
+          protocol_text?: string
+        }
+        Relationships: []
+      }
+      patients: {
+        Row: {
+          age: number
+          created_at: string
+          id: string
+          name: string
+          preferred_language: string
+        }
+        Insert: {
+          age: number
+          created_at?: string
+          id?: string
+          name: string
+          preferred_language?: string
+        }
+        Update: {
+          age?: number
+          created_at?: string
+          id?: string
+          name?: string
+          preferred_language?: string
+        }
+        Relationships: []
+      }
+      visits: {
+        Row: {
+          confirmation_message: string | null
+          created_at: string
+          doctor_decision: string | null
+          doctor_notes: string | null
+          drug_safety_info: Json | null
+          duration: string | null
+          history_text: string | null
+          id: string
+          image_analysis: string | null
+          image_url: string | null
+          patient_id: string
+          preliminary_assessment: string | null
+          protocol_text: string | null
+          risk_tier: string | null
+          status: string
+          structured_summary: Json | null
+          symptoms_text: string
+          triggering_rules: Json | null
+          vitals: Json
+        }
+        Insert: {
+          confirmation_message?: string | null
+          created_at?: string
+          doctor_decision?: string | null
+          doctor_notes?: string | null
+          drug_safety_info?: Json | null
+          duration?: string | null
+          history_text?: string | null
+          id?: string
+          image_analysis?: string | null
+          image_url?: string | null
+          patient_id: string
+          preliminary_assessment?: string | null
+          protocol_text?: string | null
+          risk_tier?: string | null
+          status?: string
+          structured_summary?: Json | null
+          symptoms_text: string
+          triggering_rules?: Json | null
+          vitals?: Json
+        }
+        Update: {
+          confirmation_message?: string | null
+          created_at?: string
+          doctor_decision?: string | null
+          doctor_notes?: string | null
+          drug_safety_info?: Json | null
+          duration?: string | null
+          history_text?: string | null
+          id?: string
+          image_analysis?: string | null
+          image_url?: string | null
+          patient_id?: string
+          preliminary_assessment?: string | null
+          protocol_text?: string | null
+          risk_tier?: string | null
+          status?: string
+          structured_summary?: Json | null
+          symptoms_text?: string
+          triggering_rules?: Json | null
+          vitals?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visits_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
