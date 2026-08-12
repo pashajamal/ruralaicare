@@ -22,6 +22,7 @@ import {
   Settings,
   ShieldCheck,
   Stethoscope,
+  Video,
   WifiOff,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
@@ -56,6 +57,7 @@ const WORKER_NAV: NavGroup[] = [
     items: [
       { to: "/my-cases", key: "myCases", icon: FileText },
       { to: "/queue", key: "queue", icon: ListChecks },
+      { to: "/consultation", key: "liveConsult", icon: Video },
       { to: "/history", key: "history", icon: History },
     ],
   },
@@ -85,6 +87,7 @@ const DOCTOR_NAV: NavGroup[] = [
     items: [
       { to: "/", key: "dashboard", icon: LayoutDashboard },
       { to: "/doctor", key: "reviewQueue", icon: Stethoscope },
+      { to: "/consultation", key: "liveConsult", icon: Video },
     ],
   },
   {
