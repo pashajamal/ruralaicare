@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { hasCondition, type ChronicCondition, type PregnancyStatus } from "./conditions";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-2.5-flash";
@@ -156,6 +157,158 @@ Rules: never state a definitive diagnosis. Use hedged wording only: "consistent 
 /* ---------------- Step 3: deterministic risk scoring ---------------- */
 
 export type RiskResult = { tier: "RED" | "YELLOW" | "GREEN"; rules: string[] };
+
+export type ConditionContext = {
+  chronic: ChronicCondition[];
+  pregnancy: PregnancyStatus | null;
+};
+
+const TIERS = ["GREEN", "YELLOW", "RED"] as const;
+
+function escalate(tier: RiskResult["tier"]): RiskResult["tier"] {
+  const i = TIERS.indexOf(tier);
+  return TIERS[Math.min(i + 1, TIERS.length - 1)]!;
+}
+
+const PREGNANCY_RED_FLAGS = ["severe headache", "swelling", "high blood pressure", "reduced fetal movement", "bleeding"];
+
+/**
+ * Deterministic condition-aware modifiers layered on top of the vitals/symptom rules.
+ * Never LLM-driven: chronic conditions can only raise the tier, never lower it.
+ */
+export function applyConditionModifiers(
+  base: RiskResult,
+  ctx: ConditionContext,
+  symptomsText: string,
+): RiskResult {
+  let tier = base.tier;
+  const rules = [...base.rules];
+  const text = symptomsText.toLowerCase();
+
+  const preg = ctx.pregnancy;
+  if (preg?.status === "Pregnant" && (preg.trimester === "2nd" || preg.trimester === "3rd")) {
+    const reported = (preg.symptoms ?? []).map((s) => s.toLowerCase());
+    const flagged = PREGNANCY_RED_FLAGS.filter(
+      (flag) => reported.some((s) => s.includes(flag)) || text.includes(flag),
+    );
+    if (flagged.length > 0) {
+      tier = "RED";
+      rules.push(`Pregnancy (${preg.trimester} trimester) + ${flagged.join(", ")} — escalated to RED`);
+    }
+  }
+
+  if (hasCondition(ctx.chronic, "diabet")) {
+    const wound = ["wound", "injury", "cut", "burn", "ulcer", "sore", "skin", "rash", "blister", "infection"].filter((w) =>
+      text.includes(w),
+    );
+    if (wound.length > 0) {
+      const next = escalate(tier);
+      if (next !== tier) rules.push(`Diabetes on file + ${wound[0]} reported — escalated to ${next} (slower healing, higher infection risk)`);
+      else rules.push(`Diabetes on file + ${wound[0]} reported — already at highest tier`);
+      tier = next;
+    }
+  }
+
+  if (hasCondition(ctx.chronic, "thyroid")) {
+    const thyroid = ["palpitation", "heart rate", "rapid heartbeat", "weight loss", "weight gain", "fatigue", "tired"].filter(
+      (w) => text.includes(w),
+    );
+    if (thyroid.length > 0) {
+      const next = escalate(tier);
+      if (next !== tier) rules.push(`Thyroid disorder on file + ${thyroid[0]} — escalated to ${next} (may mask or mimic other conditions)`);
+      else rules.push(`Thyroid disorder on file + ${thyroid[0]} — already at highest tier`);
+      tier = next;
+    }
+  }
+
+  const congenital = ctx.chronic.find((c) => /congenital|birth condition/i.test(c.condition_name));
+  if (congenital) {
+    const note = `${congenital.condition_name} ${congenital.diagnosed_note ?? ""} ${congenital.medication_name ?? ""}`.toLowerCase();
+    const systems: Array<[string, string[]]> = [
+      ["cardiac", ["chest", "palpitation", "heart", "cyanosis", "breathless", "fainting"]],
+      ["respiratory", ["breath", "cough", "wheeze", "chest"]],
+      ["neurological", ["seizure", "headache", "fits", "unconscious", "weakness"]],
+      ["renal", ["urine", "urination", "swelling", "kidney"]],
+    ];
+    for (const [system, words] of systems) {
+      const known = note.includes(system) || words.some((w) => note.includes(w));
+      const match = words.find((w) => text.includes(w));
+      if (known && match) {
+        tier = "RED";
+        rules.push(`Congenital condition on file (${congenital.condition_name}) + ${system} symptom "${match}" — escalated to RED`);
+        break;
+      }
+    }
+  }
+
+  return { tier, rules };
+}
+
+/* ---------------- Condition-aware suggestion guardrails ---------------- */
+
+/** Returns a caution note when a medicine/remedy may be unsafe for a flagged condition. */
+export function suggestionGuardrail(
+  suggestion: string,
+  ctx: ConditionContext,
+): string | null {
+  const s = suggestion.toLowerCase();
+  if (ctx.pregnancy?.status === "Pregnant" || ctx.pregnancy?.status === "Not Sure") {
+    if (/pregnan|nursing mother|teratogen|fetal|first trimester/.test(s)) {
+      return "Suggestion withheld — patient's pregnancy status may require doctor-specific guidance for this medicine/remedy.";
+    }
+  }
+  if (hasCondition(ctx.chronic, "diabet") && /sugar|honey|jaggery|syrup|molasses|sweet/.test(s)) {
+    return "Suggestion withheld — patient's diabetes may require doctor-specific guidance for this medicine/remedy.";
+  }
+  if (hasCondition(ctx.chronic, "hypertension") && /salt|sodium|liquorice|licorice|pseudoephedrine/.test(s)) {
+    return "Suggestion withheld — patient's hypertension may require doctor-specific guidance for this medicine/remedy.";
+  }
+  if (hasCondition(ctx.chronic, "kidney") && /nsaid|ibuprofen|renal|kidney/.test(s)) {
+    return "Suggestion withheld — patient's kidney disease may require doctor-specific guidance for this medicine/remedy.";
+  }
+  if (hasCondition(ctx.chronic, "asthma") && /aspirin|nsaid|bronchospasm/.test(s)) {
+    return "Suggestion withheld — patient's asthma may require doctor-specific guidance for this medicine/remedy.";
+  }
+  return null;
+}
+
+/* ---------------- Relevant medical history alerts (cautious, non-directive) ---------------- */
+
+export type HistoryAlert = { condition: string; note: string };
+
+export async function historyAlerts(
+  ctx: ConditionContext,
+  symptomsText: string,
+  contributingRules: string[],
+): Promise<HistoryAlert[]> {
+  const items = [
+    ...ctx.chronic.map((c) => c.condition_name),
+    ...(ctx.pregnancy && ctx.pregnancy.status !== "Not Pregnant"
+      ? [`Pregnancy — ${ctx.pregnancy.status}${ctx.pregnancy.trimester ? ` (${ctx.pregnancy.trimester} trimester)` : ""}`]
+      : []),
+  ];
+  if (items.length === 0) return [];
+
+  const fallback = items.map((condition) => ({
+    condition,
+    note: `${condition} is on file for this patient — please consider how it may interact with the current presentation.`,
+  }));
+
+  try {
+    const raw = await callGemini(
+      JSON.stringify({ conditions: items, symptoms: symptomsText, triggered_rules: contributingRules }),
+      `For each listed chronic condition or pregnancy status, write ONE short sentence (max 25 words) of cautious clinical CONTEXT for a doctor explaining why it may be relevant to the reported symptoms.
+Return ONLY JSON: {"alerts":[{"condition":string,"note":string}]}
+Rules: never diagnose, never give a directive or treatment instruction, never assign a risk tier. Phrase as context that defers to the doctor's judgment.`,
+      true,
+    );
+    const parsed = parseJson<{ alerts?: HistoryAlert[] }>(raw, {});
+    const alerts = (parsed.alerts ?? []).filter((a) => a?.condition && a?.note);
+    return alerts.length > 0 ? alerts : fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 export function scoreRisk(structured: StructuredSummary, symptomsText: string): RiskResult {
   const rules: string[] = [];

@@ -1,14 +1,18 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Json } from "@/integrations/supabase/types";
 import { specialtyFor } from "./specialty";
+import type { ChronicCondition, PregnancyStatus } from "./conditions";
 import {
+  applyConditionModifiers,
   analyzeImage,
   fetchDrugSafety,
+  historyAlerts,
   lookupAyurvedic,
   lookupProtocol,
   reasonAssessment,
   scoreRisk,
   structureIntake,
+  suggestionGuardrail,
   type DrugSafety,
   type StructuredSummary,
   type Vitals,
@@ -24,6 +28,9 @@ export type IntakeInput = {
   history: string;
   vitals: Vitals;
   image_path?: string | null | undefined;
+  sex?: string | null | undefined;
+  chronic_conditions?: ChronicCondition[] | undefined;
+  pregnancy_status?: PregnancyStatus | null | undefined;
 };
 
 async function audit(entry: {
@@ -71,7 +78,12 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
   if (patient) {
     await supabaseAdmin
       .from("patients")
-      .update({ name: input.name, age: input.age, preferred_language: input.preferred_language })
+      .update({
+        name: input.name,
+        age: input.age,
+        preferred_language: input.preferred_language,
+        ...(input.sex ? { sex: input.sex } : {}),
+      })
       .eq("id", patient.id);
   } else {
     const { data: created, error: patientError } = await supabaseAdmin
@@ -84,12 +96,42 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
         preferred_language: input.preferred_language,
         health_centre: centre,
         created_by: userId,
+        sex: input.sex ?? null,
       })
       .select("id")
       .single();
     if (patientError || !created) throw new Error("Could not save patient record");
     patient = created;
   }
+
+  // Chronic conditions are persistent per patient: upsert what was entered, then read back the full record.
+  const submitted = input.chronic_conditions ?? [];
+  if (submitted.length > 0) {
+    await supabaseAdmin.from("patient_conditions").upsert(
+      submitted.map((c) => ({
+        patient_id: patient.id,
+        health_centre: centre,
+        condition_name: c.condition_name,
+        on_medication: c.on_medication,
+        medication_name: c.medication_name || null,
+        diagnosed_note: c.diagnosed_note ?? null,
+        updated_at: new Date().toISOString(),
+      })),
+      { onConflict: "patient_id,condition_name" },
+    );
+  }
+  const { data: storedConditions } = await supabaseAdmin
+    .from("patient_conditions")
+    .select("condition_name, on_medication, medication_name, diagnosed_note")
+    .eq("patient_id", patient.id);
+  const chronic: ChronicCondition[] = (storedConditions ?? []).map((c) => ({
+    condition_name: c.condition_name,
+    on_medication: Boolean(c.on_medication),
+    medication_name: c.medication_name ?? "",
+    diagnosed_note: c.diagnosed_note ?? "",
+  }));
+  const pregnancy = input.pregnancy_status ?? null;
+  const conditionCtx = { chronic, pregnancy };
 
   const { data: visit, error: visitError } = await supabaseAdmin
     .from("visits")
@@ -103,6 +145,8 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
       status: "pending_review",
       health_centre: centre,
       created_by: userId,
+      chronic_conditions: { conditions: chronic, alerts: [], guardrails: [] } as unknown as Json,
+      pregnancy_status: (pregnancy ?? null) as unknown as Json,
     })
     .select("id")
     .single();
@@ -167,33 +211,73 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
   }
 
   // 3. Deterministic risk scoring — pure code, always runs, even if the AI failed
-  const risk = scoreRisk(structured, input.symptoms);
+  const baseRisk = scoreRisk(structured, input.symptoms);
+  // 3b. Condition-aware modifiers (chronic conditions / pregnancy) — deterministic, can only escalate
+  const risk = applyConditionModifiers(
+    baseRisk,
+    conditionCtx,
+    `${input.symptoms} ${structured.symptoms.join(" ")} ${input.history}`,
+  );
 
   // 4 + 5. GREEN only: fixed protocol lookup + OpenFDA drug safety. RED hard-stops.
   let protocolText: string | null = null;
   let drugSafety: DrugSafety | null = null;
   let ayurvedic: { condition_name: string; remedy_text: string; source_reference: string | null } | null = null;
+  const guardrailNotes: string[] = [];
   if (risk.tier === "GREEN") {
     try {
       const protocol = await lookupProtocol(structured, input.symptoms);
       if (protocol) {
         protocolText = `${protocol.condition_name}\n\n${protocol.protocol_text}`;
-        if (protocol.otc_medicine) drugSafety = await fetchDrugSafety(protocol.otc_medicine);
+        if (protocol.otc_medicine) {
+          drugSafety = await fetchDrugSafety(protocol.otc_medicine);
+          // Guardrail: cross-check the label text against the patient's flagged conditions.
+          const labelText = [
+            protocol.otc_medicine,
+            drugSafety?.contraindications,
+            drugSafety?.warnings,
+            drugSafety?.pediatric_use,
+            drugSafety?.geriatric_use,
+          ]
+            .filter(Boolean)
+            .join(" ");
+          const caution = suggestionGuardrail(labelText, conditionCtx);
+          if (caution) {
+            drugSafety = { medicine: protocol.otc_medicine, source: "openFDA", note: caution };
+            guardrailNotes.push(caution);
+          }
+        }
       }
     } catch (error) {
       console.error("protocol/drug lookup failed", error);
     }
     try {
       ayurvedic = await lookupAyurvedic(structured, input.symptoms);
+      if (ayurvedic) {
+        const caution = suggestionGuardrail(`${ayurvedic.condition_name} ${ayurvedic.remedy_text}`, conditionCtx);
+        if (caution) {
+          ayurvedic = { condition_name: ayurvedic.condition_name, remedy_text: caution, source_reference: null };
+          guardrailNotes.push(caution);
+        }
+      }
     } catch (error) {
       console.error("ayurvedic lookup failed", error);
     }
+  }
+
+  // 5b. Cautious, non-directive context notes for the doctor about relevant history.
+  let alerts: Array<{ condition: string; note: string }> = [];
+  try {
+    alerts = await historyAlerts(conditionCtx, `${input.symptoms} ${input.history}`, risk.rules);
+  } catch (error) {
+    console.error("history alerts failed", error);
   }
 
   await supabaseAdmin
     .from("visits")
     .update({
       structured_summary: structured as unknown as Json,
+      chronic_conditions: { conditions: chronic, alerts, guardrails: guardrailNotes } as unknown as Json,
       preliminary_assessment:
         assessment ??
         "AI assessment unavailable. Risk classification is based on predefined safety rules and requires professional review.",

@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 
 import { AppShell, useOnline } from "@/components/AppShell";
+import { ChronicConditionsSection, useConditionsForm } from "@/components/ChronicConditionsSection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,6 +83,8 @@ export function IntakePage() {
   const restoredRef = useRef(false);
   const [syncState, setSyncState] = useState<SyncState>("empty");
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+  const [mobile, setMobile] = useState("");
+  const conditions = useConditionsForm(mobile);
 
   useEffect(() => {
     if (profile?.preferred_patient_language) setLanguage(profile.preferred_patient_language);
@@ -106,6 +109,7 @@ export function IntakePage() {
       if (el && draft.values[field]) el.value = draft.values[field];
     }
     if (draft.language) setLanguage(draft.language);
+    if (draft.values['mobile_number']) setMobile(draft.values['mobile_number']);
     setDraftSavedAt(draft.savedAt);
     setSyncState("draft");
   }
@@ -211,7 +215,14 @@ export function IntakePage() {
       }
 
       const result = await run({
-        data: { ...values, preferred_language: language, image_path: imagePath },
+        data: {
+          ...values,
+          preferred_language: language,
+          image_path: imagePath,
+          sex: conditions.sex || null,
+          chronic_conditions: conditions.chronic,
+          pregnancy_status: conditions.pregnancyValue,
+        },
       });
 
       clearDraft();
@@ -365,6 +376,7 @@ export function IntakePage() {
                   pattern="\+?[0-9][0-9\s\-]{7,14}"
                   title="8–15 digits, optional + country code"
                   placeholder="+91 98765 43210"
+                  onChange={(e) => setMobile(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
                   Used to find this patient's past visits, care plans and consultations.
@@ -417,6 +429,8 @@ export function IntakePage() {
               </div>
             </div>
           </section>
+
+          <ChronicConditionsSection form={conditions} />
 
           <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Vitals</h2>

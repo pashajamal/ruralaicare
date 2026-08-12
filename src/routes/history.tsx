@@ -4,11 +4,13 @@ import { useMemo, useState } from "react";
 import { Loader2, Search } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
+import { ConditionBadges } from "@/components/ConditionBadges";
 import { RiskPill } from "@/components/risk";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { STATUS_LABEL, formatDateTime } from "@/lib/clinic";
+import type { PregnancyStatus } from "@/lib/conditions";
 
 export const Route = createFileRoute("/history")({
   head: () => ({
@@ -167,6 +169,11 @@ function HistoryPage() {
                         ) : (
                           "—"
                         )}
+                        <ConditionBadges
+                          patientId={patient?.id ?? null}
+                          pregnancy={(v.pregnancy_status ?? null) as PregnancyStatus | null}
+                          className="mt-1"
+                        />
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">{patient?.age ?? "—"}</td>
                       <td className="px-4 py-3 text-muted-foreground">{formatDateTime(v.created_at)}</td>
