@@ -824,6 +824,39 @@ export type Database = {
           },
         ]
       }
+      staging_medicines: {
+        Row: {
+          composition: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          medicine_name: string
+          processed: boolean
+          side_effects: string | null
+          uses: string | null
+        }
+        Insert: {
+          composition?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          medicine_name: string
+          processed?: boolean
+          side_effects?: string | null
+          uses?: string | null
+        }
+        Update: {
+          composition?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          medicine_name?: string
+          processed?: boolean
+          side_effects?: string | null
+          uses?: string | null
+        }
+        Relationships: []
+      }
       staging_prescription_images: {
         Row: {
           created_at: string
