@@ -887,6 +887,45 @@ export type Database = {
         }
         Relationships: []
       }
+      staging_vitals: {
+        Row: {
+          created_at: string
+          diastolic: number | null
+          id: string
+          note: string | null
+          patient_ref: string
+          pulse: number | null
+          respiratory_rate: number | null
+          spo2: number | null
+          systolic: number | null
+          temperature_c: number | null
+        }
+        Insert: {
+          created_at?: string
+          diastolic?: number | null
+          id?: string
+          note?: string | null
+          patient_ref: string
+          pulse?: number | null
+          respiratory_rate?: number | null
+          spo2?: number | null
+          systolic?: number | null
+          temperature_c?: number | null
+        }
+        Update: {
+          created_at?: string
+          diastolic?: number | null
+          id?: string
+          note?: string | null
+          patient_ref?: string
+          pulse?: number | null
+          respiratory_rate?: number | null
+          spo2?: number | null
+          systolic?: number | null
+          temperature_c?: number | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
