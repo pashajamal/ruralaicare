@@ -8,6 +8,8 @@ import { RiskPill } from "@/components/risk";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { t } from "@/lib/i18n";
+import { useLang } from "@/lib/lang";
 import { formatDateTime, STATUS_LABEL, TIER_ORDER, waitingSince } from "@/lib/clinic";
 
 export const Route = createFileRoute("/")({
@@ -33,6 +35,7 @@ export const Route = createFileRoute("/")({
 
 function DashboardPage() {
   const { profile, isDoctor } = useAuth();
+  const { lang } = useLang();
 
   const { data } = useQuery({
     queryKey: ["dashboard"],
@@ -79,7 +82,7 @@ function DashboardPage() {
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">
-              {isDoctor ? "Doctor dashboard" : "Health worker dashboard"}
+              {isDoctor ? t(lang, "dashDoctor") : t(lang, "dashWorker")}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {profile?.health_centre ?? "Clinic"} · {profile?.full_name}
@@ -89,19 +92,19 @@ function DashboardPage() {
             {!isDoctor ? (
               <Button asChild>
                 <Link to="/intake">
-                  <ClipboardPlus className="size-4" aria-hidden /> New intake
+                  <ClipboardPlus className="size-4" aria-hidden /> {t(lang, "newIntake")}
                 </Link>
               </Button>
             ) : null}
             {isDoctor ? (
               <Button asChild variant="outline">
                 <Link to="/doctor">
-                  <Stethoscope className="size-4" aria-hidden /> Review queue
+                  <Stethoscope className="size-4" aria-hidden /> {t(lang, "reviewQueue")}
                 </Link>
               </Button>
             ) : (
               <Button asChild variant="outline">
-                <Link to="/my-cases">My submitted cases</Link>
+                <Link to="/my-cases">{t(lang, "mySubmitted")}</Link>
               </Button>
             )}
           </div>
@@ -114,7 +117,7 @@ function DashboardPage() {
               {red.length} emergency case{red.length > 1 ? "s" : ""} awaiting immediate doctor attention
             </p>
             <Button asChild size="sm" variant="destructive">
-              <Link to="/doctor">Open emergency queue</Link>
+              <Link to="/doctor">{t(lang, "openEmergency")}</Link>
             </Button>
           </div>
         ) : null}
