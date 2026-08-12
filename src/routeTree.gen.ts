@@ -21,6 +21,7 @@ import { Route as HospitalsRouteImport } from './routes/hospitals'
 import { Route as IntakeRouteImport } from './routes/intake'
 import { Route as MedicinesRouteImport } from './routes/medicines'
 import { Route as MyCasesRouteImport } from './routes/my-cases'
+import { Route as PrescriptionsRouteImport } from './routes/prescriptions'
 import { Route as QueueRouteImport } from './routes/queue'
 import { Route as ReferralsRouteImport } from './routes/referrals'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -90,6 +91,11 @@ const MyCasesRoute = MyCasesRouteImport.update({
   path: '/my-cases',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrescriptionsRoute = PrescriptionsRouteImport.update({
+  id: '/prescriptions',
+  path: '/prescriptions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QueueRoute = QueueRouteImport.update({
   id: '/queue',
   path: '/queue',
@@ -144,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/intake': typeof IntakeRoute
   '/medicines': typeof MedicinesRoute
   '/my-cases': typeof MyCasesRoute
+  '/prescriptions': typeof PrescriptionsRoute
   '/queue': typeof QueueRoute
   '/referrals': typeof ReferralsRoute
   '/settings': typeof SettingsRoute
@@ -166,6 +173,7 @@ export interface FileRoutesByTo {
   '/intake': typeof IntakeRoute
   '/medicines': typeof MedicinesRoute
   '/my-cases': typeof MyCasesRoute
+  '/prescriptions': typeof PrescriptionsRoute
   '/queue': typeof QueueRoute
   '/referrals': typeof ReferralsRoute
   '/settings': typeof SettingsRoute
@@ -189,6 +197,7 @@ export interface FileRoutesById {
   '/intake': typeof IntakeRoute
   '/medicines': typeof MedicinesRoute
   '/my-cases': typeof MyCasesRoute
+  '/prescriptions': typeof PrescriptionsRoute
   '/queue': typeof QueueRoute
   '/referrals': typeof ReferralsRoute
   '/settings': typeof SettingsRoute
@@ -213,6 +222,7 @@ export interface FileRouteTypes {
     | '/intake'
     | '/medicines'
     | '/my-cases'
+    | '/prescriptions'
     | '/queue'
     | '/referrals'
     | '/settings'
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/intake'
     | '/medicines'
     | '/my-cases'
+    | '/prescriptions'
     | '/queue'
     | '/referrals'
     | '/settings'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
     | '/intake'
     | '/medicines'
     | '/my-cases'
+    | '/prescriptions'
     | '/queue'
     | '/referrals'
     | '/settings'
@@ -280,6 +292,7 @@ export interface RootRouteChildren {
   IntakeRoute: typeof IntakeRoute
   MedicinesRoute: typeof MedicinesRoute
   MyCasesRoute: typeof MyCasesRoute
+  PrescriptionsRoute: typeof PrescriptionsRoute
   QueueRoute: typeof QueueRoute
   ReferralsRoute: typeof ReferralsRoute
   SettingsRoute: typeof SettingsRoute
@@ -376,6 +389,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MyCasesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/prescriptions': {
+      id: '/prescriptions'
+      path: '/prescriptions'
+      fullPath: '/prescriptions'
+      preLoaderRoute: typeof PrescriptionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/queue': {
       id: '/queue'
       path: '/queue'
@@ -448,6 +468,7 @@ const rootRouteChildren: RootRouteChildren = {
   IntakeRoute: IntakeRoute,
   MedicinesRoute: MedicinesRoute,
   MyCasesRoute: MyCasesRoute,
+  PrescriptionsRoute: PrescriptionsRoute,
   QueueRoute: QueueRoute,
   ReferralsRoute: ReferralsRoute,
   SettingsRoute: SettingsRoute,

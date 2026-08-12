@@ -66,7 +66,7 @@ function parseCsv(text: string) {
     out.push(cur);
     return out.map((v) => v.trim());
   };
-  const header = split(lines[0]).map((h) => h.toLowerCase());
+  const header = split(lines[0] ?? "").map((h) => h.toLowerCase());
   const pick = (cols: string[], names: string[]) => {
     for (const n of names) {
       const idx = header.indexOf(n);
