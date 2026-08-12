@@ -149,7 +149,7 @@ function ReviewPage() {
     const { error } = await supabase.from("consultations").insert({
       visit_id: visit.id,
       patient_id: visit.patient_id,
-      health_centre: profile?.health_centre ?? undefined,
+      health_centre: profile?.health_centre ?? "Unassigned",
       priority,
       status: "waiting",
     });
@@ -182,7 +182,7 @@ function ReviewPage() {
     const { error } = await supabase.from("referrals").insert({
       visit_id: visit.id,
       patient_id: visit.patient_id,
-      health_centre: profile?.health_centre ?? undefined,
+      health_centre: profile?.health_centre ?? "Unassigned",
       risk_tier: visit.risk_tier,
       reason: rules.join(" · ") || "Clinical escalation",
       facility: facility || "Nearest hospital",
@@ -251,7 +251,7 @@ function ReviewPage() {
       await supabase.from("follow_ups").insert({
         visit_id: visit.id,
         patient_id: visit.patient_id,
-        health_centre: profile?.health_centre ?? undefined,
+        health_centre: profile?.health_centre ?? "Unassigned",
         due_date: followDate,
         reason: followReason || "Doctor-requested follow-up",
         instructions: followInstructions || null,

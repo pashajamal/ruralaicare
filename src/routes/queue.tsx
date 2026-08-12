@@ -88,7 +88,7 @@ function QueuePage() {
     const { error } = await supabase.from("consultations").insert({
       visit_id: visit.id,
       patient_id: visit.patient_id,
-      health_centre: profile?.health_centre ?? undefined,
+      health_centre: profile?.health_centre ?? "Unassigned",
       priority,
       status: "waiting",
     });
