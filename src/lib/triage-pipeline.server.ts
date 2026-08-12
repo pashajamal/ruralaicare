@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Json } from "@/integrations/supabase/types";
 import { specialtyFor } from "./specialty";
 import type { ChronicCondition, PregnancyStatus } from "./conditions";
+import { suggestMedicines, type MedicineSuggestion } from "./medicine-suggestion.server";
 import {
   applyConditionModifiers,
   analyzeImage,
@@ -224,6 +225,7 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
   let drugSafety: DrugSafety | null = null;
   let ayurvedic: { condition_name: string; remedy_text: string; source_reference: string | null } | null = null;
   const guardrailNotes: string[] = [];
+  let medicineSuggestion: MedicineSuggestion | null = null;
   if (risk.tier === "GREEN") {
     try {
       const protocol = await lookupProtocol(structured, input.symptoms);
@@ -263,6 +265,17 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
     } catch (error) {
       console.error("ayurvedic lookup failed", error);
     }
+
+    // 5c. Retrieval-only medicine suggestion from the drug_safety knowledge base (GREEN only).
+    medicineSuggestion = await suggestMedicines({
+      structured,
+      symptomsText: input.symptoms,
+      assessment,
+      conditions: conditionCtx,
+    });
+    if (medicineSuggestion.override_reason) {
+      risk.rules.push(`No medicine suggested — ${medicineSuggestion.override_reason}`);
+    }
   }
 
   // 5b. Cautious, non-directive context notes for the doctor about relevant history.
@@ -286,6 +299,7 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
       triggering_rules: risk.rules,
       protocol_text: protocolText,
       drug_safety_info: drugSafety as unknown as Json,
+      medicine_suggestion: (medicineSuggestion ?? null) as unknown as Json,
       ayurvedic_condition: ayurvedic?.condition_name ?? null,
       ayurvedic_remedy: ayurvedic?.remedy_text ?? null,
       ayurvedic_source: ayurvedic?.source_reference ?? null,
