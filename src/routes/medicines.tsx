@@ -156,15 +156,65 @@ function MedicinesPage() {
           </div>
         </form>
 
-        <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search medicine"
-            aria-label="Search medicine"
-            className="pl-9"
-          />
+        {!isLoading && (expired.length || out.length || low.length || expiring.length) ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {expired.length || expiring.length ? (
+              <div className="rounded-2xl border border-risk-red/30 bg-risk-red-soft p-4">
+                <p className="flex items-center gap-2 text-sm font-semibold text-risk-red">
+                  <CalendarX className="size-4" aria-hidden /> Expiry warnings
+                </p>
+                <ul className="mt-2 space-y-1 text-sm text-risk-red">
+                  {expired.map((r) => (
+                    <li key={r.id}>{r.medicine_name} — expired on {r.expiry_date}</li>
+                  ))}
+                  {expiring.map((r) => (
+                    <li key={r.id}>{r.medicine_name} — expires soon ({r.expiry_date})</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {out.length || low.length ? (
+              <div className="rounded-2xl border border-risk-amber/30 bg-risk-amber-soft p-4">
+                <p className="flex items-center gap-2 text-sm font-semibold text-risk-amber">
+                  <AlertTriangle className="size-4" aria-hidden /> Stock warnings
+                </p>
+                <ul className="mt-2 space-y-1 text-sm text-risk-amber">
+                  {out.map((r) => (
+                    <li key={r.id}>{r.medicine_name} — out of stock</li>
+                  ))}
+                  {low.map((r) => (
+                    <li key={r.id}>
+                      {r.medicine_name} — low stock ({r.quantity} left, threshold {threshold})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="relative max-w-sm flex-1 min-w-[12rem]">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search medicine"
+              aria-label="Search medicine"
+              className="pl-9"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="threshold">Low-stock threshold</Label>
+            <Input
+              id="threshold"
+              type="number"
+              min={0}
+              value={threshold}
+              onChange={(e) => updateThreshold(Number(e.target.value))}
+              className="w-32"
+            />
+          </div>
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
@@ -192,22 +242,47 @@ function MedicinesPage() {
                 </tr>
               ) : (
                 rows.map((r) => {
-                  const expired = r.expiry_date ? new Date(r.expiry_date) < new Date() : false;
+                  const status = statusOf(r);
+                  const pill =
+                    status === "expired" || status === "out"
+                      ? "bg-risk-red-soft text-risk-red"
+                      : status === "low" || status === "expiring"
+                        ? "bg-risk-amber-soft text-risk-amber"
+                        : "bg-risk-green-soft text-risk-green";
+                  const label =
+                    status === "expired"
+                      ? "expired"
+                      : status === "out"
+                        ? "out of stock"
+                        : status === "low"
+                          ? "low stock"
+                          : "in stock";
                   return (
-                    <tr key={r.id} className="border-t border-border">
+                    <tr
+                      key={r.id}
+                      className={`border-t border-border ${
+                        status === "expired" || status === "out"
+                          ? "bg-risk-red-soft/40"
+                          : status === "low" || status === "expiring"
+                            ? "bg-risk-amber-soft/40"
+                            : ""
+                      }`}
+                    >
                       <td className="px-4 py-3 font-medium">{r.medicine_name}</td>
                       <td className="px-4 py-3">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                            r.quantity > 0 && !expired
-                              ? "bg-risk-green-soft text-risk-green"
-                              : "bg-risk-amber-soft text-risk-amber"
-                          }`}
-                        >
-                          {r.quantity} {r.quantity > 0 && !expired ? "in stock" : expired ? "expired" : "out of stock"}
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${pill}`}>
+                          {r.quantity} {label}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground">{r.expiry_date ?? "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {r.expiry_date ?? "—"}
+                        {status === "expiring" ? (
+                          <span className="ml-2 text-xs font-semibold text-risk-amber">expires soon</span>
+                        ) : null}
+                        {status === "expired" ? (
+                          <span className="ml-2 text-xs font-semibold text-risk-red">expired</span>
+                        ) : null}
+                      </td>
                       <td className="px-4 py-3 text-right">
                         <Button
                           size="sm"
