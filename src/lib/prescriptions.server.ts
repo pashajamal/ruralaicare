@@ -1,3 +1,4 @@
+import { geminiFetch } from "./gemini.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const VISION_MODEL = "google/gemini-2.5-flash";
@@ -20,12 +21,6 @@ export type StructuredRx = {
   medications: { drug_name?: string; dosage?: string; frequency?: string; instructions?: string }[];
   raw_ocr_text: string;
 };
-
-function apiKey() {
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("AI extraction is temporarily unavailable");
-  return key;
-}
 
 function mimeFor(name: string) {
   const ext = name.split(".").pop()?.toLowerCase();
@@ -65,10 +60,7 @@ async function transcribe(filename: string): Promise<StructuredRx> {
   }
   const dataUrl = `data:${mimeFor(filename)};base64,${btoa(binary)}`;
 
-  const res = await fetch(`${GATEWAY}/chat/completions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey()}` },
-    body: JSON.stringify({
+  const res = await geminiFetch("/chat/completions", {
       model: VISION_MODEL,
       response_format: { type: "json_object" },
       messages: [
@@ -80,8 +72,7 @@ async function transcribe(filename: string): Promise<StructuredRx> {
           ],
         },
       ],
-    }),
-  });
+    });
   if (!res.ok) throw new Error(`Vision extraction failed (${res.status})`);
   const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
   const text = json.choices?.[0]?.message?.content ?? "{}";
@@ -96,11 +87,7 @@ async function transcribe(filename: string): Promise<StructuredRx> {
 }
 
 async function embed(content: string): Promise<number[]> {
-  const res = await fetch(`${GATEWAY}/embeddings`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey()}` },
-    body: JSON.stringify({ model: EMBED_MODEL, input: content, dimensions: 768, encoding_format: "float" }),
-  });
+  const res = await geminiFetch("/embeddings", { model: EMBED_MODEL, input: content, dimensions: 768, encoding_format: "float" });
   if (!res.ok) throw new Error(`Embedding failed (${res.status})`);
   const json = (await res.json()) as { data?: { embedding?: number[] }[] };
   const vec = json.data?.[0]?.embedding;

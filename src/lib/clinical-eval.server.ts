@@ -1,3 +1,4 @@
+import { geminiFetch } from "./gemini.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const CHAT_MODEL = "google/gemini-2.5-flash";
@@ -6,12 +7,6 @@ const RX_BUCKET = "prescription-images";
 
 const SYMPTOM_SOURCES = ["symptom_disease_reference", "symptom_disease"];
 const RX_SOURCE = "prescription_handwritten_ocr";
-
-function apiKey() {
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("Clinical AI is temporarily unavailable");
-  return key;
-}
 
 export type EvalVitals = {
   temperature_c: number | null;
@@ -43,11 +38,7 @@ export function triageVitals(v: EvalVitals): { tier: "RED" | "YELLOW" | "GREEN";
 }
 
 async function embed(content: string): Promise<number[]> {
-  const res = await fetch(`${GATEWAY}/embeddings`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey()}` },
-    body: JSON.stringify({ model: EMBED_MODEL, input: content, dimensions: 768, encoding_format: "float" }),
-  });
+  const res = await geminiFetch("/embeddings", { model: EMBED_MODEL, input: content, dimensions: 768, encoding_format: "float" });
   if (!res.ok) throw new Error(`Embedding failed (${res.status})`);
   const json = (await res.json()) as { data?: { embedding?: number[] }[] };
   const vec = json.data?.[0]?.embedding;
@@ -186,18 +177,14 @@ Respond with JSON only using this shape:
  "medication_insights":{"summary":string,"alignment":string,"side_effect_alerts":string[],"source_ids":string[]},
  "next_steps":string[],"diagnostic_tests":string[],"limitations":string}`;
 
-  const res = await fetch(`${GATEWAY}/chat/completions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey()}` },
-    body: JSON.stringify({
+  const res = await geminiFetch("/chat/completions", {
       model: CHAT_MODEL,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: system },
         { role: "user", content: `CONTEXT:\n${JSON.stringify(context)}` },
       ],
-    }),
-  });
+    });
   if (res.status === 429) throw new Error("AI rate limit reached. Please retry in a moment.");
   if (res.status === 402) throw new Error("AI credits exhausted.");
   if (!res.ok) throw new Error(`Clinical analysis failed (${res.status})`);
