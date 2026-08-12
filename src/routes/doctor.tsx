@@ -58,9 +58,14 @@ function DoctorPage() {
 
   async function setConsultStatus(id: string, status: "waiting" | "in_consultation" | "completed") {
     setBusy(id);
-    const patch: Record<string, unknown> = { status, assigned_doctor: profile?.id ?? null };
-    if (status === "in_consultation") patch['started_at'] = new Date().toISOString();
-    if (status === "completed") patch['completed_at'] = new Date().toISOString();
+    const now = new Date().toISOString();
+    const patch = {
+      status,
+      assigned_doctor: profile?.id ?? null,
+      updated_at: now,
+      ...(status === "in_consultation" ? { started_at: now } : {}),
+      ...(status === "completed" ? { completed_at: now } : {}),
+    };
     const { data: row, error } = await supabase.from("consultations").update(patch).eq("id", id).select("visit_id, patient_id").maybeSingle();
     setBusy(null);
     if (error) {
