@@ -1,7 +1,19 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState, type FormEvent } from "react";
-import { AlertTriangle, CloudOff, ImageUp, Loader2, RefreshCw, Sparkles, Stethoscope, X } from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  CloudOff,
+  HardDriveDownload,
+  ImageUp,
+  Loader2,
+  RefreshCw,
+  Sparkles,
+  Stethoscope,
+  Trash2,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell, useOnline } from "@/components/AppShell";
@@ -19,7 +31,16 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { submitIntake } from "@/lib/triage.functions";
-import { addPending, offlineEmergencyCheck, readPending, removePending, type PendingIntake } from "@/lib/offline";
+import {
+  addPending,
+  clearDraft,
+  offlineEmergencyCheck,
+  readDraft,
+  readPending,
+  removePending,
+  writeDraft,
+  type PendingIntake,
+} from "@/lib/offline";
 import { validateVitals, type VitalWarning } from "@/lib/vitals";
 
 export const Route = createFileRoute("/intake")({
@@ -42,6 +63,8 @@ export const Route = createFileRoute("/intake")({
 });
 
 const LANGUAGES = ["English", "Hindi", "Bangla", "Arabic"];
+const DRAFT_FIELDS = ["name", "age", "symptoms", "duration", "history", "temp", "bp", "pulse", "spo2"] as const;
+type SyncState = "empty" | "draft" | "saving" | "synced";
 
 export function IntakePage() {
   const navigate = useNavigate();
@@ -54,6 +77,10 @@ export function IntakePage() {
   const [warnings, setWarnings] = useState<VitalWarning[]>([]);
   const [pending, setPending] = useState<PendingIntake[]>([]);
   const [syncing, setSyncing] = useState(false);
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const restoredRef = useRef(false);
+  const [syncState, setSyncState] = useState<SyncState>("empty");
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile?.preferred_patient_language) setLanguage(profile.preferred_patient_language);
@@ -65,6 +92,51 @@ export function IntakePage() {
     window.addEventListener("clinic:pending-changed", refresh);
     return () => window.removeEventListener("clinic:pending-changed", refresh);
   }, []);
+
+  /** Restores an unfinished intake as soon as the form element mounts. */
+  function attachForm(node: HTMLFormElement | null) {
+    formRef.current = node;
+    if (!node || restoredRef.current) return;
+    restoredRef.current = true;
+    const draft = readDraft();
+    if (!draft) return;
+    for (const field of DRAFT_FIELDS) {
+      const el = node.elements.namedItem(field) as HTMLInputElement | HTMLTextAreaElement | null;
+      if (el && draft.values[field]) el.value = draft.values[field];
+    }
+    if (draft.language) setLanguage(draft.language);
+    setDraftSavedAt(draft.savedAt);
+    setSyncState("draft");
+  }
+
+  function saveDraft() {
+    if (!formRef.current) return;
+    const data = new FormData(formRef.current);
+    const values: Record<string, string> = {};
+    let filled = false;
+    for (const field of DRAFT_FIELDS) {
+      const value = String(data.get(field) ?? "");
+      values[field] = value;
+      if (value.trim()) filled = true;
+    }
+    if (!filled) {
+      clearDraft();
+      setDraftSavedAt(null);
+      setSyncState("empty");
+      return;
+    }
+    const draft = writeDraft(values, language);
+    setDraftSavedAt(draft.savedAt);
+    setSyncState("draft");
+  }
+
+  function discardDraft() {
+    clearDraft();
+    formRef.current?.reset();
+    setDraftSavedAt(null);
+    setSyncState("empty");
+    setWarnings([]);
+  }
 
   function readForm(form: FormData) {
     const num = (key: string) => {
@@ -91,6 +163,7 @@ export function IntakePage() {
     const form = new FormData(event.currentTarget);
     const values = readForm(form);
     setWarnings(validateVitals({ ...values.vitals, age: values.age }));
+    saveDraft();
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -111,11 +184,15 @@ export function IntakePage() {
       if (emergency.length > 0) {
         toast.error(`Offline emergency check: ${emergency[0]}. Arrange referral now.`, { duration: 12000 });
       }
+      clearDraft();
+      setDraftSavedAt(null);
+      setSyncState("empty");
       (event.target as HTMLFormElement).reset();
       return;
     }
 
     setBusy(true);
+    setSyncState("saving");
     try {
       let imagePath: string | null = null;
       if (file) {
@@ -129,10 +206,14 @@ export function IntakePage() {
         data: { ...values, preferred_language: language, image_path: imagePath },
       });
 
+      clearDraft();
+      setDraftSavedAt(null);
+      setSyncState("synced");
       toast.success("Intake saved — routed to doctor review");
       void navigate({ to: "/review/$visitId", params: { visitId: result.visitId } });
     } catch (error) {
       addPending({ ...values, preferred_language: language });
+      setSyncState("draft");
       toast.error("Unable to connect. Your unsynced intake has been saved locally.");
       console.error(error);
     } finally {
@@ -221,7 +302,38 @@ export function IntakePage() {
           </div>
         ) : null}
 
-        <form onSubmit={onSubmit} onBlur={onValidate} className="space-y-5">
+        <div className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
+          {syncState === "saving" ? (
+            <p className="flex items-center gap-2 text-sm font-medium">
+              <Loader2 className="size-4 animate-spin text-primary" aria-hidden /> Saving to the clinic record…
+            </p>
+          ) : syncState === "synced" ? (
+            <p className="flex items-center gap-2 text-sm font-medium text-risk-green">
+              <CheckCircle2 className="size-4" aria-hidden /> Saved to the clinic record
+            </p>
+          ) : syncState === "draft" ? (
+            <p className="flex items-center gap-2 text-sm font-medium text-risk-amber">
+              <HardDriveDownload className="size-4" aria-hidden /> Draft saved on this device
+              {draftSavedAt ? (
+                <span className="font-normal text-muted-foreground">
+                  · {new Date(draftSavedAt).toLocaleTimeString()} · not yet in the clinic record
+                </span>
+              ) : null}
+            </p>
+          ) : (
+            <p className="flex items-center gap-2 text-sm text-muted-foreground">
+              <HardDriveDownload className="size-4" aria-hidden /> Nothing typed yet — this form auto-saves a local draft
+              as you fill it in.
+            </p>
+          )}
+          {syncState === "draft" ? (
+            <Button type="button" size="sm" variant="outline" className="ml-auto" onClick={discardDraft}>
+              <Trash2 className="size-4" aria-hidden /> Discard draft
+            </Button>
+          ) : null}
+        </div>
+
+        <form ref={attachForm} onSubmit={onSubmit} onBlur={onValidate} onChange={saveDraft} className="space-y-5">
           <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Patient details

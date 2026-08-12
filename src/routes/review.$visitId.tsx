@@ -16,6 +16,8 @@ import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
 import { AuditTimeline } from "@/components/AuditTimeline";
+import { DecisionAudit } from "@/components/DecisionAudit";
+import { ReferralHospitals } from "@/components/ReferralHospitals";
 import { DocumentViewer } from "@/components/DocumentViewer";
 import { VitalsCards } from "@/components/VitalsCards";
 import { RiskPill, TIER_BLURB, TIER_LABEL, tierClasses, type Tier } from "@/components/risk";
@@ -478,6 +480,12 @@ function ReviewPage() {
               </p>
             ) : null}
 
+            <ReferralHospitals
+              specialty={visit.hospital_specialty_tag ?? "Emergency"}
+              chosen={facility}
+              onChoose={setFacility}
+            />
+
             {!visit.emergency_acknowledged ? (
               <label className="mt-5 flex items-start gap-3 rounded-xl border border-risk-red/30 bg-card p-4 text-sm">
                 <input
@@ -828,6 +836,10 @@ function ReviewPage() {
         </section>
 
         {/* Audit */}
+        <section>
+          <DecisionAudit visit={visit as never} />
+        </section>
+
         <section>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Activity timeline</h2>
           <AuditTimeline visitId={visit.id} />

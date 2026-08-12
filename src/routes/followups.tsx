@@ -4,6 +4,7 @@ import { CalendarClock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
+import { DueReminders } from "@/components/DueReminders";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -70,6 +71,12 @@ function FollowUpsPage() {
             Scheduled by the doctor at finalization. Overdue items are highlighted.
           </p>
         </header>
+
+        <DueReminders limit={20} />
+
+        <h2 className="pt-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Scheduled follow-up visits
+        </h2>
 
         {isLoading ? (
           <Loader2 className="size-4 animate-spin" aria-hidden />

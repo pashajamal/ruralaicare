@@ -8,7 +8,7 @@ import { RiskPill } from "@/components/risk";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { CLINIC_ORIGIN, distanceKm } from "@/lib/specialty";
+import { CLINIC_ORIGIN, distanceKm, mapsDirectionsUrl } from "@/lib/specialty";
 
 export const Route = createFileRoute("/hospitals")({
   head: () => ({
@@ -140,11 +140,7 @@ function HospitalsPage() {
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button asChild size="sm">
-                  <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${h.latitude},${h.longitude}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
+                  <a href={mapsDirectionsUrl(h.latitude, h.longitude)} target="_blank" rel="noreferrer">
                     <Navigation className="size-4" aria-hidden /> Get directions
                   </a>
                 </Button>

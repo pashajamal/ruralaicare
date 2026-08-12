@@ -27,3 +27,9 @@ export function distanceKm(a: { lat: number; lng: number }, b: { lat: number; ln
 
 /** Sample village coordinates used as the clinic origin for the MVP. */
 export const CLINIC_ORIGIN = { lat: 26.8467, lng: 80.9462 };
+
+/** Google Maps driving-directions link from the health centre to a facility. */
+export function mapsDirectionsUrl(lat: number, lng: number) {
+  const origin = `${CLINIC_ORIGIN.lat},${CLINIC_ORIGIN.lng}`;
+  return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${lat},${lng}&travelmode=driving`;
+}
