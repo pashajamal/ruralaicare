@@ -10,11 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { t } from "@/lib/i18n";
+import { statusLabel, t } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import {
   CONSULT_STATUS_LABEL,
-  STATUS_LABEL,
   TIER_ORDER,
   logAudit,
   notify,
@@ -206,7 +205,7 @@ function QueuePage() {
                         <RiskPill tier={row.risk_tier} />
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">{waitingSince(row.created_at)}</td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">{STATUS_LABEL[row.status] ?? row.status}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">{statusLabel(lang, row.status)}</td>
                       <td className="px-4 py-3 text-xs">
                         {row.consult ? (
                           <span className="font-medium">{CONSULT_STATUS_LABEL[row.consult.status] ?? row.consult.status}</span>

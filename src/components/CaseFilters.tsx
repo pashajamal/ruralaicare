@@ -1,8 +1,21 @@
+import { t } from "@/lib/i18n";
+import { useLang } from "@/lib/lang";
+
 export const CASE_FILTERS = ["All", "Red", "Yellow", "Green", "Pending", "Finalized"] as const;
 export type CaseFilter = (typeof CASE_FILTERS)[number];
 
+const FILTER_KEYS = {
+  All: "all",
+  Red: "red",
+  Yellow: "yellow",
+  Green: "green",
+  Pending: "pending",
+  Finalized: "finalized",
+} as const;
+
 /** Shared All / Red / Yellow / Green / Pending / Finalized chips. */
 export function CaseFilterChips({ value, onChange }: { value: CaseFilter; onChange: (next: CaseFilter) => void }) {
+  const { lang } = useLang();
   return (
     <div className="flex flex-wrap gap-2" role="group" aria-label="Filter cases">
       {CASE_FILTERS.map((option) => (
@@ -17,7 +30,7 @@ export function CaseFilterChips({ value, onChange }: { value: CaseFilter; onChan
               : "border-border bg-card text-muted-foreground hover:text-foreground"
           }`}
         >
-          {option}
+          {t(lang, FILTER_KEYS[option])}
         </button>
       ))}
     </div>

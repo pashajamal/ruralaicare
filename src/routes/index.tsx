@@ -8,9 +8,9 @@ import { RiskPill } from "@/components/risk";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { t } from "@/lib/i18n";
+import { statusLabel, t } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
-import { formatDateTime, STATUS_LABEL, TIER_ORDER, waitingSince } from "@/lib/clinic";
+import { formatDateTime, TIER_ORDER, waitingSince } from "@/lib/clinic";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -153,7 +153,7 @@ function DashboardPage() {
                       <span className="text-xs text-muted-foreground">
                         {patient?.age ?? "—"} {t(lang, "yrs")} · {t(lang, "waitingWord")} {waitingSince(v.created_at)}
                       </span>
-                      <span className="ml-auto text-xs text-muted-foreground">{STATUS_LABEL[v.status] ?? v.status}</span>
+                      <span className="ml-auto text-xs text-muted-foreground">{statusLabel(lang, v.status)}</span>
                       <Button asChild size="sm" variant="outline">
                         <Link to="/review/$visitId" params={{ visitId: v.id }}>
                           {t(lang, "open")}

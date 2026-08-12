@@ -9,8 +9,8 @@ import { RiskPill } from "@/components/risk";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { STATUS_LABEL, formatDateTime } from "@/lib/clinic";
-import { t } from "@/lib/i18n";
+import { formatDateTime } from "@/lib/clinic";
+import { statusLabel, t } from "@/lib/i18n";
 import { useLang } from "@/lib/lang";
 import type { PregnancyStatus } from "@/lib/conditions";
 
@@ -120,7 +120,7 @@ function HistoryPage() {
           >
             {STATUSES.map((s) => (
               <option key={s} value={s}>
-                {s === "All" ? t(lang, "allStatuses") : STATUS_LABEL[s]}
+                {s === "All" ? t(lang, "allStatuses") : statusLabel(lang, s)}
               </option>
             ))}
           </select>
@@ -186,7 +186,7 @@ function HistoryPage() {
                       <td className="px-4 py-3">
                         <RiskPill tier={v.risk_tier} />
                       </td>
-                      <td className="px-4 py-3 text-xs">{STATUS_LABEL[v.status] ?? v.status}</td>
+                      <td className="px-4 py-3 text-xs">{statusLabel(lang, v.status)}</td>
                       <td className="px-4 py-3 text-xs capitalize text-muted-foreground">{v.doctor_decision ?? "—"}</td>
                       <td className="px-4 py-3 text-right">
                         <Button asChild size="sm" variant="outline">
