@@ -68,7 +68,9 @@ export function CaseConsultBar({ visitId, patientId, patientName, visitCentre, t
         health_centre: profile?.health_centre ?? visitCentre,
         type,
         initiated_by: session?.user?.id ?? null,
-        ...(isDoctor ? { assigned_doctor: session?.user?.id ?? null, doctor_id: session?.user?.id ?? null } : {}),
+        ...(isDoctor
+          ? { assigned_doctor: session?.user?.id ?? null }
+          : { health_worker_id: session?.user?.id ?? null }),
         urgent_flag: urgentFlag,
         priority: urgentFlag ? "emergency" : tier === "RED" ? "urgent" : "routine",
         status: type === "chat" ? "waiting" : "in_consultation",

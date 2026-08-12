@@ -19,6 +19,7 @@ import { Route as FollowupsRouteImport } from './routes/followups'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as HospitalsRouteImport } from './routes/hospitals'
 import { Route as IntakeRouteImport } from './routes/intake'
+import { Route as MedicinesRouteImport } from './routes/medicines'
 import { Route as MyCasesRouteImport } from './routes/my-cases'
 import { Route as QueueRouteImport } from './routes/queue'
 import { Route as ReferralsRouteImport } from './routes/referrals'
@@ -79,6 +80,11 @@ const IntakeRoute = IntakeRouteImport.update({
   path: '/intake',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MedicinesRoute = MedicinesRouteImport.update({
+  id: '/medicines',
+  path: '/medicines',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MyCasesRoute = MyCasesRouteImport.update({
   id: '/my-cases',
   path: '/my-cases',
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/history': typeof HistoryRoute
   '/hospitals': typeof HospitalsRoute
   '/intake': typeof IntakeRoute
+  '/medicines': typeof MedicinesRoute
   '/my-cases': typeof MyCasesRoute
   '/queue': typeof QueueRoute
   '/referrals': typeof ReferralsRoute
@@ -157,6 +164,7 @@ export interface FileRoutesByTo {
   '/history': typeof HistoryRoute
   '/hospitals': typeof HospitalsRoute
   '/intake': typeof IntakeRoute
+  '/medicines': typeof MedicinesRoute
   '/my-cases': typeof MyCasesRoute
   '/queue': typeof QueueRoute
   '/referrals': typeof ReferralsRoute
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   '/history': typeof HistoryRoute
   '/hospitals': typeof HospitalsRoute
   '/intake': typeof IntakeRoute
+  '/medicines': typeof MedicinesRoute
   '/my-cases': typeof MyCasesRoute
   '/queue': typeof QueueRoute
   '/referrals': typeof ReferralsRoute
@@ -202,6 +211,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/hospitals'
     | '/intake'
+    | '/medicines'
     | '/my-cases'
     | '/queue'
     | '/referrals'
@@ -223,6 +233,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/hospitals'
     | '/intake'
+    | '/medicines'
     | '/my-cases'
     | '/queue'
     | '/referrals'
@@ -244,6 +255,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/hospitals'
     | '/intake'
+    | '/medicines'
     | '/my-cases'
     | '/queue'
     | '/referrals'
@@ -266,6 +278,7 @@ export interface RootRouteChildren {
   HistoryRoute: typeof HistoryRoute
   HospitalsRoute: typeof HospitalsRoute
   IntakeRoute: typeof IntakeRoute
+  MedicinesRoute: typeof MedicinesRoute
   MyCasesRoute: typeof MyCasesRoute
   QueueRoute: typeof QueueRoute
   ReferralsRoute: typeof ReferralsRoute
@@ -349,6 +362,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IntakeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/medicines': {
+      id: '/medicines'
+      path: '/medicines'
+      fullPath: '/medicines'
+      preLoaderRoute: typeof MedicinesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/my-cases': {
       id: '/my-cases'
       path: '/my-cases'
@@ -426,6 +446,7 @@ const rootRouteChildren: RootRouteChildren = {
   HistoryRoute: HistoryRoute,
   HospitalsRoute: HospitalsRoute,
   IntakeRoute: IntakeRoute,
+  MedicinesRoute: MedicinesRoute,
   MyCasesRoute: MyCasesRoute,
   QueueRoute: QueueRoute,
   ReferralsRoute: ReferralsRoute,
