@@ -12,7 +12,14 @@ import { lovable } from "@/integrations/lovable/index";
 import { bootstrapAccount } from "@/lib/account.functions";
 import { useAuth } from "@/lib/auth";
 
+function safeNext(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  if (!value.startsWith("/") || value.startsWith("//")) return undefined;
+  return value;
+}
+
 export const Route = createFileRoute("/auth")({
+  validateSearch: (s: Record<string, unknown>) => ({ next: safeNext(s.next) }),
   head: () => ({
     meta: [
       { title: "Staff Sign In | AI Virtual Clinic" },
@@ -32,15 +39,25 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const { session, refresh } = useAuth();
+
+  function goNext() {
+    if (next) {
+      window.location.href = next;
+      return;
+    }
+    void navigate({ to: "/" });
+  }
   const bootstrap = useServerFn(bootstrapAccount);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [role, setRole] = useState<"health_worker" | "doctor">("health_worker");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (session) void navigate({ to: "/" });
-  }, [session, navigate]);
+    if (session) goNext();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, next]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -56,7 +73,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: { emailRedirectTo: next ? `${window.location.origin}${next}` : window.location.origin },
         });
         if (error) throw error;
       } else {
@@ -79,7 +96,7 @@ function AuthPage() {
       });
       await refresh();
       toast.success("Signed in");
-      void navigate({ to: "/" });
+      goNext();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Sign in failed");
     } finally {
@@ -88,7 +105,7 @@ function AuthPage() {
   }
 
   async function google() {
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: next ? `${window.location.origin}${next}` : window.location.origin });
     if (result.error) {
       toast.error("Google sign-in failed");
       return;
@@ -96,7 +113,7 @@ function AuthPage() {
     if (result.redirected) return;
     await bootstrap({ data: { full_name: "", role, health_centre: "Rampur Health Centre" } });
     await refresh();
-    void navigate({ to: "/" });
+    goNext();
   }
 
   return (
