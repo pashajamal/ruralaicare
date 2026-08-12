@@ -1,14 +1,18 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Json } from "@/integrations/supabase/types";
 import { specialtyFor } from "./specialty";
+import type { ChronicCondition, PregnancyStatus } from "./conditions";
 import {
+  applyConditionModifiers,
   analyzeImage,
   fetchDrugSafety,
+  historyAlerts,
   lookupAyurvedic,
   lookupProtocol,
   reasonAssessment,
   scoreRisk,
   structureIntake,
+  suggestionGuardrail,
   type DrugSafety,
   type StructuredSummary,
   type Vitals,
@@ -24,6 +28,9 @@ export type IntakeInput = {
   history: string;
   vitals: Vitals;
   image_path?: string | null | undefined;
+  sex?: string | null | undefined;
+  chronic_conditions?: ChronicCondition[] | undefined;
+  pregnancy_status?: PregnancyStatus | null | undefined;
 };
 
 async function audit(entry: {
