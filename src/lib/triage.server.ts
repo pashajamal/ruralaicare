@@ -227,6 +227,27 @@ export async function lookupProtocol(structured: StructuredSummary, symptomsText
   return bestScore > 0 ? best : null;
 }
 
+/* ---------------- Step 4b: Ayurvedic / home remedy lookup (GREEN only) ---------------- */
+
+export async function lookupAyurvedic(structured: StructuredSummary, symptomsText: string) {
+  const { data } = await supabaseAdmin
+    .from("ayurvedic_protocols")
+    .select("condition_name, keywords, remedy_text, source_reference");
+  if (!data) return null;
+
+  const text = `${symptomsText} ${structured.symptoms.join(" ")}`.toLowerCase();
+  let best: (typeof data)[number] | null = null;
+  let bestScore = 0;
+  for (const row of data) {
+    const score = (row.keywords ?? []).filter((k) => text.includes(k.toLowerCase())).length;
+    if (score > bestScore) {
+      best = row;
+      bestScore = score;
+    }
+  }
+  return bestScore > 0 ? best : null;
+}
+
 /* ---------------- Step 5: OpenFDA drug safety (GREEN only) ---------------- */
 
 export type DrugSafety = {
