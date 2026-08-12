@@ -445,21 +445,19 @@ export function IntakePage() {
                   ref={symptomsRef}
                   required
                   rows={5}
-                  placeholder="Write in any language the health worker is comfortable with."
+                  placeholder={t(lang, "symptomsPlaceholder")}
                 />
                 {voiceFilled['symptoms'] ? (
-                  <p className="text-xs text-risk-amber">
-                    Transcribed from voice — please read it back and correct any misheard words before submitting.
-                  </p>
+                  <p className="text-xs text-risk-amber">{t(lang, "voiceCheck")}</p>
                 ) : null}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="duration">Duration of symptoms</Label>
-                <Input id="duration" name="duration" placeholder="e.g. 3 days" />
+                <Label htmlFor="duration">{t(lang, "durationLabel")}</Label>
+                <Input id="duration" name="duration" placeholder={t(lang, "durationPlaceholder")} />
               </div>
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <Label htmlFor="history">Basic medical history</Label>
+                  <Label htmlFor="history">{t(lang, "historyLabel")}</Label>
                   <VoiceRecorder
                     field="history"
                     languageHint={language}
@@ -471,12 +469,10 @@ export function IntakePage() {
                   name="history"
                   ref={historyRef}
                   rows={3}
-                  placeholder="Chronic conditions, medicines, allergies"
+                  placeholder={t(lang, "historyPlaceholder")}
                 />
                 {voiceFilled['history'] ? (
-                  <p className="text-xs text-risk-amber">
-                    Transcribed from voice — please read it back and correct any misheard words before submitting.
-                  </p>
+                  <p className="text-xs text-risk-amber">{t(lang, "voiceCheck")}</p>
                 ) : null}
               </div>
             </div>
@@ -485,22 +481,24 @@ export function IntakePage() {
           <ChronicConditionsSection form={conditions} />
 
           <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Vitals</h2>
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              {t(lang, "vitals")}
+            </h2>
             <div className="grid gap-4 sm:grid-cols-4">
               <div className="space-y-2">
-                <Label htmlFor="temp">Temperature (°C)</Label>
+                <Label htmlFor="temp">{t(lang, "temperature")}</Label>
                 <Input id="temp" name="temp" type="number" step="0.1" placeholder="37.0" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="bp">Blood pressure</Label>
+                <Label htmlFor="bp">{t(lang, "bloodPressure")}</Label>
                 <Input id="bp" name="bp" placeholder="120/80" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="pulse">Pulse (bpm)</Label>
+                <Label htmlFor="pulse">{t(lang, "pulse")}</Label>
                 <Input id="pulse" name="pulse" type="number" placeholder="80" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="spo2">SpO2 (%)</Label>
+                <Label htmlFor="spo2">{t(lang, "spo2")}</Label>
                 <Input id="spo2" name="spo2" type="number" placeholder="98" />
               </div>
             </div>
@@ -508,7 +506,7 @@ export function IntakePage() {
             {emergencyWarnings.length > 0 ? (
               <div role="alert" className="mt-4 rounded-xl border border-risk-red/30 bg-risk-red-soft p-4 text-sm text-risk-red">
                 <p className="flex items-center gap-2 font-bold">
-                  <AlertTriangle className="size-4" aria-hidden /> Emergency threshold triggered
+                  <AlertTriangle className="size-4" aria-hidden /> {t(lang, "emergencyThreshold")}
                 </p>
                 <ul className="mt-2 list-disc space-y-1 pl-5">
                   {emergencyWarnings.map((w) => (
@@ -520,30 +518,28 @@ export function IntakePage() {
 
             {verifyWarnings.length > 0 ? (
               <div role="alert" className="mt-4 rounded-xl border border-risk-amber/30 bg-risk-amber-soft p-4 text-sm text-risk-amber">
-                <p className="font-semibold">Please verify these measurements</p>
+                <p className="font-semibold">{t(lang, "verifyMeasurements")}</p>
                 <ul className="mt-2 list-disc space-y-1 pl-5">
                   {verifyWarnings.map((w) => (
                     <li key={w.field}>{w.message}</li>
                   ))}
                 </ul>
-                <p className="mt-2 text-xs">Values are never corrected automatically — re-check and re-enter.</p>
+                <p className="mt-2 text-xs">{t(lang, "verifyHelp")}</p>
               </div>
             ) : null}
           </section>
 
           <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Optional upload
+              {t(lang, "optionalUpload")}
             </h2>
             <label
               htmlFor="file"
               className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border px-6 py-10 text-center transition-colors hover:border-primary"
             >
               <ImageUp className="size-6 text-muted-foreground" aria-hidden />
-              <span className="text-sm font-medium">Upload wound photo or prescription</span>
-              <span className="text-xs text-muted-foreground">
-                Stored privately. Reviewed for observation or text extraction only — never a diagnosis.
-              </span>
+              <span className="text-sm font-medium">{t(lang, "uploadCta")}</span>
+              <span className="text-xs text-muted-foreground">{t(lang, "uploadHelp")}</span>
               <input
                 id="file"
                 type="file"
@@ -564,11 +560,9 @@ export function IntakePage() {
 
           <Button type="submit" size="lg" className="w-full" disabled={busy}>
             {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Sparkles className="size-4" aria-hidden />}
-            {online ? "Submit for AI Assessment" : "Save offline"}
+            {online ? t(lang, "submitAi") : t(lang, "saveOffline")}
           </Button>
-          <p className="pb-4 text-center text-xs text-muted-foreground">
-            AI-generated information is advisory only. It does not replace a qualified medical professional.
-          </p>
+          <p className="pb-4 text-center text-xs text-muted-foreground">{t(lang, "advisoryNote")}</p>
         </form>
       </div>
     </AppShell>
