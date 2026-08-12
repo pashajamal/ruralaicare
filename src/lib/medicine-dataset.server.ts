@@ -1,6 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 const EMBED_MODEL = "google/gemini-embedding-001";
 
 function apiKey() {

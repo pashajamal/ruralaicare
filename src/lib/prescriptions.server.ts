@@ -1,6 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 const VISION_MODEL = "google/gemini-2.5-flash";
 const EMBED_MODEL = "google/gemini-embedding-001";
 const BUCKET = "prescription-images";

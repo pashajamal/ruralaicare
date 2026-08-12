@@ -1,6 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 const EMBED_MODEL = "google/gemini-embedding-001";
 const SYMPTOM_SOURCES = ["symptom_disease_reference", "symptom_disease"];
 

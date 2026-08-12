@@ -2,7 +2,6 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { fetchDrugSafety, suggestionGuardrail, type StructuredSummary } from "./triage.server";
 import type { ChronicCondition, PregnancyStatus } from "./conditions";
 
-const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 const EMBED_MODEL = "google/gemini-embedding-001";
 const DRUG_SOURCE = "drug_safety";
 /** Below this cosine similarity we refuse to suggest anything rather than guess. */

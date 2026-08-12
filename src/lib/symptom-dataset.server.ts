@@ -1,6 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 // Lovable AI Gateway equivalent of text-embedding-004, at the 768 dims our vector column uses.
 const EMBED_MODEL = "google/gemini-embedding-001";
 
