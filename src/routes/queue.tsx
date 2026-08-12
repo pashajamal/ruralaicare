@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { t } from "@/lib/i18n";
+import { useLang } from "@/lib/lang";
 import {
   CONSULT_STATUS_LABEL,
   STATUS_LABEL,
@@ -39,6 +41,7 @@ const STATUS_FILTERS = ["Pending", "All", "Finalized"] as const;
 
 function QueuePage() {
   const { profile, role } = useAuth();
+  const { lang } = useLang();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [tier, setTier] = useState<(typeof TIER_FILTERS)[number]>("All");
@@ -119,26 +122,40 @@ function QueuePage() {
     <AppShell>
       <div className="mx-auto max-w-6xl space-y-5">
         <header>
-          <h1 className="text-2xl font-semibold tracking-tight">Patient Queue</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Sorted by clinical urgency — emergency (RED) cases always appear first, then by longest wait.
-          </p>
+          <h1 className="text-2xl font-semibold tracking-tight">{t(lang, "queue")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t(lang, "queueSubtitle")}</p>
         </header>
 
         {redCount > 0 ? (
           <p className="flex items-center gap-2 rounded-2xl border border-risk-red/30 bg-risk-red-soft px-4 py-3 text-sm font-semibold text-risk-red">
-            <AlertTriangle className="size-4" aria-hidden /> {redCount} emergency case
-            {redCount > 1 ? "s" : ""} at the top of the queue
+            <AlertTriangle className="size-4" aria-hidden /> {redCount} {t(lang, "emergencyTop")}
           </p>
         ) : null}
 
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative min-w-56 flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by patient name" className="pl-9" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t(lang, "searchByName")}
+              className="pl-9"
+            />
           </div>
-          <FilterChips options={TIER_FILTERS} value={tier} onChange={setTier} />
-          <FilterChips options={STATUS_FILTERS} value={statusFilter} onChange={setStatusFilter} />
+          <FilterChips
+            options={TIER_FILTERS}
+            value={tier}
+            onChange={setTier}
+            label={(o) => (o === "All" ? t(lang, "all") : o)}
+          />
+          <FilterChips
+            options={STATUS_FILTERS}
+            value={statusFilter}
+            onChange={setStatusFilter}
+            label={(o) =>
+              o === "All" ? t(lang, "all") : o === "Pending" ? t(lang, "pending") : t(lang, "finalized")
+            }
+          />
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
@@ -146,11 +163,11 @@ function QueuePage() {
             <thead className="bg-secondary text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 font-semibold">#</th>
-                <th className="px-4 py-3 font-semibold">Patient</th>
-                <th className="px-4 py-3 font-semibold">Risk tier</th>
-                <th className="px-4 py-3 font-semibold">Waiting</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
-                <th className="px-4 py-3 font-semibold">Consultation</th>
+                <th className="px-4 py-3 font-semibold">{t(lang, "patient")}</th>
+                <th className="px-4 py-3 font-semibold">{t(lang, "riskTier")}</th>
+                <th className="px-4 py-3 font-semibold">{t(lang, "waitingCol")}</th>
+                <th className="px-4 py-3 font-semibold">{t(lang, "status")}</th>
+                <th className="px-4 py-3 font-semibold">{t(lang, "consultation")}</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -164,7 +181,7 @@ function QueuePage() {
               ) : rows.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">
-                    No patients match these filters.
+                    {t(lang, "noMatchFilters")}
                   </td>
                 </tr>
               ) : (
@@ -181,7 +198,9 @@ function QueuePage() {
                         >
                           {patient?.name ?? "—"}
                         </Link>
-                        <span className="ml-2 text-xs text-muted-foreground">{patient?.age ?? "—"} yrs</span>
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          {patient?.age ?? "—"} {t(lang, "yrs")}
+                        </span>
                       </td>
                       <td className="px-4 py-3">
                         <RiskPill tier={row.risk_tier} />
@@ -200,9 +219,9 @@ function QueuePage() {
                                 key={p}
                                 disabled={busyId === row.id}
                                 onClick={() => requestConsult(row, p)}
-                                className="rounded-full border border-border px-2 py-1 text-[11px] font-semibold capitalize hover:border-primary hover:text-primary disabled:opacity-50"
+                                className="rounded-full border border-border px-2 py-1 text-[11px] font-semibold hover:border-primary hover:text-primary disabled:opacity-50"
                               >
-                                {p}
+                                {t(lang, p)}
                               </button>
                             ))}
                           </div>
@@ -211,7 +230,7 @@ function QueuePage() {
                       <td className="px-4 py-3 text-right">
                         <Button asChild size="sm" variant="outline">
                           <Link to="/review/$visitId" params={{ visitId: row.id }}>
-                            View
+                            {t(lang, "view")}
                           </Link>
                         </Button>
                       </td>
@@ -222,9 +241,7 @@ function QueuePage() {
             </tbody>
           </table>
         </div>
-        <p className="pb-2 text-xs text-muted-foreground">
-          Choose an urgency to request a remote doctor consultation. Queue position updates automatically.
-        </p>
+        <p className="pb-2 text-xs text-muted-foreground">{t(lang, "queueFooter")}</p>
       </div>
     </AppShell>
   );
@@ -234,10 +251,12 @@ function FilterChips<T extends string>({
   options,
   value,
   onChange,
+  label,
 }: {
   options: readonly T[];
   value: T;
   onChange: (v: T) => void;
+  label?: (option: T) => string;
 }) {
   return (
     <div className="flex gap-2">
@@ -251,7 +270,7 @@ function FilterChips<T extends string>({
               : "border-border bg-card text-muted-foreground hover:text-foreground"
           }`}
         >
-          {option}
+          {label ? label(option) : option}
         </button>
       ))}
     </div>

@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { STATUS_LABEL, formatDateTime } from "@/lib/clinic";
+import { t } from "@/lib/i18n";
+import { useLang } from "@/lib/lang";
 import type { PregnancyStatus } from "@/lib/conditions";
 
 export const Route = createFileRoute("/history")({
@@ -31,6 +33,7 @@ const TIERS = ["All", "RED", "YELLOW", "GREEN"] as const;
 const STATUSES = ["All", "pending_review", "doctor_reviewing", "finalized"] as const;
 
 function HistoryPage() {
+  const { lang } = useLang();
   const [search, setSearch] = useState("");
   const [tier, setTier] = useState<(typeof TIERS)[number]>("All");
   const [status, setStatus] = useState<(typeof STATUSES)[number]>("All");
@@ -74,11 +77,8 @@ function HistoryPage() {
     <AppShell>
       <div className="mx-auto max-w-6xl space-y-5">
         <header>
-          <h1 className="text-2xl font-semibold tracking-tight">Patient History</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Search by patient name, mobile number, patient ID or visit ID. A mobile number pulls up that patient's full
-            history across every past visit. Open any record for the full clinical review.
-          </p>
+          <h1 className="text-2xl font-semibold tracking-tight">{t(lang, "history")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t(lang, "historySubtitle")}</p>
         </header>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -87,12 +87,18 @@ function HistoryPage() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Patient name, mobile number, patient ID or visit ID"
+              placeholder={t(lang, "searchHistory")}
               className="pl-9"
-              aria-label="Search visits"
+              aria-label={t(lang, "searchHistory")}
             />
           </div>
-          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-40" aria-label="From date" />
+          <Input
+            type="date"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            className="w-40"
+            aria-label={t(lang, "fromDate")}
+          />
           <div className="flex gap-2">
             {TIERS.map((option) => (
               <button
@@ -102,7 +108,7 @@ function HistoryPage() {
                   tier === option ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground"
                 }`}
               >
-                {option}
+                {option === "All" ? t(lang, "all") : option}
               </button>
             ))}
           </div>
@@ -114,13 +120,13 @@ function HistoryPage() {
           >
             {STATUSES.map((s) => (
               <option key={s} value={s}>
-                {s === "All" ? "All statuses" : STATUS_LABEL[s]}
+                {s === "All" ? t(lang, "allStatuses") : STATUS_LABEL[s]}
               </option>
             ))}
           </select>
           <label className="flex items-center gap-2 text-xs font-semibold">
             <input type="checkbox" className="size-4" checked={referralOnly} onChange={(e) => setReferralOnly(e.target.checked)} />
-            Referral required
+            {t(lang, "referralRequired")}
           </label>
         </div>
 
@@ -128,12 +134,12 @@ function HistoryPage() {
           <table className="w-full text-sm">
             <thead className="bg-secondary text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
-                <th className="px-4 py-3 font-semibold">Patient</th>
-                <th className="px-4 py-3 font-semibold">Age</th>
-                <th className="px-4 py-3 font-semibold">Date</th>
-                <th className="px-4 py-3 font-semibold">Risk tier</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
-                <th className="px-4 py-3 font-semibold">Decision</th>
+                <th className="px-4 py-3 font-semibold">{t(lang, "patient")}</th>
+                <th className="px-4 py-3 font-semibold">{t(lang, "age")}</th>
+                <th className="px-4 py-3 font-semibold">{t(lang, "date")}</th>
+                <th className="px-4 py-3 font-semibold">{t(lang, "riskTier")}</th>
+                <th className="px-4 py-3 font-semibold">{t(lang, "status")}</th>
+                <th className="px-4 py-3 font-semibold">{t(lang, "decision")}</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -147,13 +153,13 @@ function HistoryPage() {
               ) : isError ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-10 text-center text-sm text-muted-foreground">
-                    Unable to load visit history. Check your connection and try again.
+                    {t(lang, "historyLoadFail")}
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-10 text-center text-sm text-muted-foreground">
-                    No previous visits found.
+                    {t(lang, "noPreviousVisits")}
                   </td>
                 </tr>
               ) : (
@@ -185,7 +191,7 @@ function HistoryPage() {
                       <td className="px-4 py-3 text-right">
                         <Button asChild size="sm" variant="outline">
                           <Link to="/review/$visitId" params={{ visitId: v.id }}>
-                            View
+                            {t(lang, "view")}
                           </Link>
                         </Button>
                       </td>
