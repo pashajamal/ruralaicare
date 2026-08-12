@@ -18,6 +18,8 @@ import { Route as IntakeRouteImport } from './routes/intake'
 import { Route as QueueRouteImport } from './routes/queue'
 import { Route as ReferralsRouteImport } from './routes/referrals'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as PatientsPatientIdRouteImport } from './routes/patients.$patientId'
+import { Route as ReferralVisitIdRouteImport } from './routes/referral.$visitId'
 import { Route as ReviewVisitIdRouteImport } from './routes/review.$visitId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -65,6 +67,16 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PatientsPatientIdRoute = PatientsPatientIdRouteImport.update({
+  id: '/patients/$patientId',
+  path: '/patients/$patientId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferralVisitIdRoute = ReferralVisitIdRouteImport.update({
+  id: '/referral/$visitId',
+  path: '/referral/$visitId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReviewVisitIdRoute = ReviewVisitIdRouteImport.update({
   id: '/review/$visitId',
   path: '/review/$visitId',
@@ -81,6 +93,8 @@ export interface FileRoutesByFullPath {
   '/queue': typeof QueueRoute
   '/referrals': typeof ReferralsRoute
   '/settings': typeof SettingsRoute
+  '/patients/$patientId': typeof PatientsPatientIdRoute
+  '/referral/$visitId': typeof ReferralVisitIdRoute
   '/review/$visitId': typeof ReviewVisitIdRoute
 }
 export interface FileRoutesByTo {
@@ -93,6 +107,8 @@ export interface FileRoutesByTo {
   '/queue': typeof QueueRoute
   '/referrals': typeof ReferralsRoute
   '/settings': typeof SettingsRoute
+  '/patients/$patientId': typeof PatientsPatientIdRoute
+  '/referral/$visitId': typeof ReferralVisitIdRoute
   '/review/$visitId': typeof ReviewVisitIdRoute
 }
 export interface FileRoutesById {
@@ -106,6 +122,8 @@ export interface FileRoutesById {
   '/queue': typeof QueueRoute
   '/referrals': typeof ReferralsRoute
   '/settings': typeof SettingsRoute
+  '/patients/$patientId': typeof PatientsPatientIdRoute
+  '/referral/$visitId': typeof ReferralVisitIdRoute
   '/review/$visitId': typeof ReviewVisitIdRoute
 }
 export interface FileRouteTypes {
@@ -120,6 +138,8 @@ export interface FileRouteTypes {
     | '/queue'
     | '/referrals'
     | '/settings'
+    | '/patients/$patientId'
+    | '/referral/$visitId'
     | '/review/$visitId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -132,6 +152,8 @@ export interface FileRouteTypes {
     | '/queue'
     | '/referrals'
     | '/settings'
+    | '/patients/$patientId'
+    | '/referral/$visitId'
     | '/review/$visitId'
   id:
     | '__root__'
@@ -144,6 +166,8 @@ export interface FileRouteTypes {
     | '/queue'
     | '/referrals'
     | '/settings'
+    | '/patients/$patientId'
+    | '/referral/$visitId'
     | '/review/$visitId'
   fileRoutesById: FileRoutesById
 }
@@ -157,6 +181,8 @@ export interface RootRouteChildren {
   QueueRoute: typeof QueueRoute
   ReferralsRoute: typeof ReferralsRoute
   SettingsRoute: typeof SettingsRoute
+  PatientsPatientIdRoute: typeof PatientsPatientIdRoute
+  ReferralVisitIdRoute: typeof ReferralVisitIdRoute
   ReviewVisitIdRoute: typeof ReviewVisitIdRoute
 }
 
@@ -225,6 +251,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/patients/$patientId': {
+      id: '/patients/$patientId'
+      path: '/patients/$patientId'
+      fullPath: '/patients/$patientId'
+      preLoaderRoute: typeof PatientsPatientIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/referral/$visitId': {
+      id: '/referral/$visitId'
+      path: '/referral/$visitId'
+      fullPath: '/referral/$visitId'
+      preLoaderRoute: typeof ReferralVisitIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/review/$visitId': {
       id: '/review/$visitId'
       path: '/review/$visitId'
@@ -245,6 +285,8 @@ const rootRouteChildren: RootRouteChildren = {
   QueueRoute: QueueRoute,
   ReferralsRoute: ReferralsRoute,
   SettingsRoute: SettingsRoute,
+  PatientsPatientIdRoute: PatientsPatientIdRoute,
+  ReferralVisitIdRoute: ReferralVisitIdRoute,
   ReviewVisitIdRoute: ReviewVisitIdRoute,
 }
 export const routeTree = rootRouteImport
