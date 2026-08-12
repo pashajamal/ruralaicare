@@ -9,6 +9,7 @@ import {
   Flag,
   Leaf,
   Loader2,
+  Pill,
   Printer,
   ShieldCheck,
   Sparkles,
