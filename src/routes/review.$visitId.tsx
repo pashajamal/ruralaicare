@@ -348,7 +348,7 @@ function ReviewPage() {
         <section className={`rounded-2xl border p-6 shadow-sm ${tierClasses(tier)}`} aria-live="polite">
           <div className="flex flex-wrap items-center gap-3">
             <RiskPill tier={tier} withLabel />
-            <h2 className="text-xl font-bold uppercase tracking-wide">RISK TIER: {TIER_LABEL[tier]}</h2>
+            <h2 className="text-xl font-bold uppercase tracking-wide">{TIER_LABEL[tier]}</h2>
           </div>
           <p className="mt-2 text-sm">{TIER_BLURB[tier]}</p>
         </section>
