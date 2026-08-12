@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { UI_LANGUAGES } from "@/lib/i18n";
+import { t, UI_LANGUAGES } from "@/lib/i18n";
+import { useLang } from "@/lib/lang";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -45,6 +46,7 @@ function normalizeLang(value: string | null | undefined) {
 
 function SettingsPage() {
   const { profile, role, refresh } = useAuth();
+  const { lang, setLang } = useLang();
   const [form, setForm] = useState({
     full_name: "",
     health_centre: "",
@@ -98,23 +100,23 @@ function SettingsPage() {
     <AppShell>
       <div className="mx-auto max-w-4xl space-y-5 pb-8">
         <header>
-          <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Profile, language, notifications and active safety rules.</p>
+          <h1 className="text-2xl font-semibold tracking-tight">{t(lang, "settingsTitle")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t(lang, "settingsSubtitle")}</p>
         </header>
 
         <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Profile</h2>
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">{t(lang, "profile")}</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">{t(lang, "name")}</Label>
               <Input id="name" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="centre">Health centre</Label>
+              <Label htmlFor="centre">{t(lang, "healthCentre")}</Label>
               <Input id="centre" value={form.health_centre} onChange={(e) => setForm({ ...form, health_centre: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Role</Label>
+              <Label>{t(lang, "role")}</Label>
               <p className="flex h-9 items-center gap-2 rounded-md border border-border bg-secondary px-3 text-sm capitalize">
                 <Lock className="size-3.5 text-muted-foreground" aria-hidden /> {(role ?? "staff").replace("_", " ")}
               </p>
@@ -123,14 +125,17 @@ function SettingsPage() {
         </section>
 
         <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Language</h2>
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">{t(lang, "language")}</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="ui">Interface language</Label>
+              <Label htmlFor="ui">{t(lang, "interfaceLanguage")}</Label>
               <select
                 id="ui"
-                value={form.ui_language}
-                onChange={(e) => setForm({ ...form, ui_language: e.target.value })}
+                value={lang}
+                onChange={(e) => {
+                  setForm({ ...form, ui_language: e.target.value });
+                  setLang(e.target.value);
+                }}
                 className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
                 {UI_LANGUAGES.map((l) => (
@@ -141,7 +146,7 @@ function SettingsPage() {
               </select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="patient">Default patient language</Label>
+              <Label htmlFor="patient">{t(lang, "patientLanguage")}</Label>
               <select
                 id="patient"
                 value={form.preferred_patient_language}
