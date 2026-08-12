@@ -61,7 +61,6 @@ export type Match = {
   source_type: string;
   content: string;
   similarity: number;
-  metadata: Record<string, unknown> | null;
 };
 
 async function matchKnowledge(vector: number[], sourceType: string, count: number): Promise<Match[]> {
@@ -76,7 +75,6 @@ async function matchKnowledge(vector: number[], sourceType: string, count: numbe
     source_type: r.source_type,
     content: r.content,
     similarity: Number(r.similarity ?? 0),
-    metadata: (r.metadata ?? null) as Record<string, unknown> | null,
   }));
 }
 
@@ -133,14 +131,13 @@ export async function runClinicalEvaluation(args: {
     patient_name: string | null;
     extracted_ocr_text: string | null;
     medication_details: string | null;
-    structured_data: unknown;
     image_url: string | null;
   } | null = null;
 
   if (args.prescriptionId) {
     const { data } = await supabaseAdmin
       .from("staging_prescription_images")
-      .select("id, image_filename, patient_name, extracted_ocr_text, medication_details, structured_data")
+      .select("id, image_filename, patient_name, extracted_ocr_text, medication_details")
       .eq("id", args.prescriptionId)
       .maybeSingle();
     if (data) {
@@ -174,7 +171,6 @@ export async function runClinicalEvaluation(args: {
           image_filename: prescription.image_filename,
           ocr_text: prescription.extracted_ocr_text,
           medication_details: prescription.medication_details,
-          structured_data: prescription.structured_data,
         }
       : null,
   };
