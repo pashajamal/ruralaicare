@@ -5,6 +5,7 @@ import { AlertTriangle, Loader2, Stethoscope } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
+import { DueReminders } from "@/components/DueReminders";
 import { RiskPill } from "@/components/risk";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -239,6 +240,8 @@ function DoctorPage() {
             </ul>
           )}
         </section>
+
+        <DueReminders limit={6} />
       </div>
     </AppShell>
   );

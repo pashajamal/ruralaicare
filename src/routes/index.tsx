@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Activity, AlertTriangle, CalendarClock, ClipboardPlus, Send, ShieldCheck, Stethoscope } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
+import { DueReminders } from "@/components/DueReminders";
 import { RiskPill } from "@/components/risk";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -194,6 +195,8 @@ function DashboardPage() {
           <TierCount label="YELLOW" count={visits.filter((v) => v.risk_tier === "YELLOW").length} />
           <TierCount label="GREEN" count={visits.filter((v) => v.risk_tier === "GREEN").length} />
         </div>
+
+        <DueReminders limit={5} compact />
 
         <p className="pb-2 text-xs text-muted-foreground">
           Last updated {formatDateTime(new Date().toISOString())}

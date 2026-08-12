@@ -1,4 +1,5 @@
 const KEY = "clinic.pendingIntakes";
+const DRAFT_KEY = "clinic.intakeDraft";
 
 export type PendingIntake = {
   localId: string;
@@ -39,6 +40,33 @@ export function addPending(item: Omit<PendingIntake, "localId" | "savedAt">) {
 
 export function removePending(localId: string) {
   writePending(readPending().filter((p) => p.localId !== localId));
+}
+
+export type IntakeDraft = {
+  savedAt: string;
+  values: Record<string, string>;
+  language: string;
+};
+
+/** Reads the in-progress intake draft kept on this device. */
+export function readDraft(): IntakeDraft | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(DRAFT_KEY);
+    return raw ? (JSON.parse(raw) as IntakeDraft) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function writeDraft(values: Record<string, string>, language: string): IntakeDraft {
+  const draft: IntakeDraft = { savedAt: new Date().toISOString(), values, language };
+  if (typeof window !== "undefined") window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  return draft;
+}
+
+export function clearDraft() {
+  if (typeof window !== "undefined") window.localStorage.removeItem(DRAFT_KEY);
 }
 
 /** Deterministic offline emergency check — no AI, mirrors the RED rules in the risk engine. */
