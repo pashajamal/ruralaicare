@@ -38,6 +38,11 @@ const RULES = [
   "No rule triggered → GREEN (basic support with fixed protocol)",
 ];
 
+/** Older profiles may hold a language we no longer support — fall back to English. */
+function normalizeLang(value: string | null | undefined) {
+  return (UI_LANGUAGES as readonly string[]).includes(value ?? "") ? (value as string) : "English";
+}
+
 function SettingsPage() {
   const { profile, role, refresh } = useAuth();
   const [form, setForm] = useState({
@@ -56,8 +61,8 @@ function SettingsPage() {
     setForm({
       full_name: profile.full_name ?? "",
       health_centre: profile.health_centre ?? "",
-      ui_language: profile.ui_language ?? "English",
-      preferred_patient_language: profile.preferred_patient_language ?? "English",
+      ui_language: normalizeLang(profile.ui_language),
+      preferred_patient_language: normalizeLang(profile.preferred_patient_language),
       notify_red: profile.notify_red,
       notify_consultation: profile.notify_consultation,
       notify_followup: profile.notify_followup,

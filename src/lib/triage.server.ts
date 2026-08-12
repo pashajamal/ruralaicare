@@ -114,10 +114,10 @@ export async function structureIntake(input: {
 }): Promise<StructuredSummary> {
   const raw = await callGemini(
     JSON.stringify(input),
-    `Extract structured clinical intake data from the health worker's raw text, which may be in any language (English, Hindi, Bangla, Arabic and others).
+    `Extract structured clinical intake data from the health worker's raw text, which may be in English, Hindi (Devanagari) or Hinglish (Hindi written in Roman script).
 Return ONLY JSON with this exact shape:
 {"symptoms":[string],"duration":string,"age":number,"vitals":{"temp":number|null,"bp":string|null,"pulse":number|null,"spo2":number|null},"history":string,"detected_language":string,"confirmation_message":string}
-"confirmation_message" must be a short (max 30 words) confirmation that the intake was received, written in the SAME language the health worker typed in. Do not diagnose.`,
+"confirmation_message" must be a short (max 30 words) confirmation that the intake was received, written in the SAME language and script the health worker typed in (reply in Roman-script Hinglish if they wrote Hinglish). "detected_language" must be one of "English", "Hindi" or "Hinglish". Do not diagnose.`,
     true,
   );
 
