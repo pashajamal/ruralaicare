@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   ArrowDown,
   CheckCircle2,
+  Leaf,
   Loader2,
   Printer,
   ShieldCheck,
@@ -16,7 +17,9 @@ import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
 import { AuditTimeline } from "@/components/AuditTimeline";
+import { CaseConsultBar } from "@/components/CaseConsultBar";
 import { DecisionAudit } from "@/components/DecisionAudit";
+import { MedicineBadge, MedicineMentions } from "@/components/MedicineBadge";
 import { ReferralHospitals } from "@/components/ReferralHospitals";
 import { DocumentViewer } from "@/components/DocumentViewer";
 import { VitalsCards } from "@/components/VitalsCards";
@@ -104,7 +107,7 @@ function ReviewPage() {
   });
 
   const patient = (visit?.patients ?? null) as
-    | { id: string; name: string; age: number; preferred_language: string; contact: string | null; location: string | null; health_centre: string | null }
+    | { id: string; name: string; age: number; preferred_language: string; contact: string | null; mobile_number: string | null; location: string | null; health_centre: string | null }
     | null;
   const tier = (visit?.risk_tier ?? "YELLOW") as Tier;
   const rules = Array.isArray(visit?.triggering_rules) ? (visit.triggering_rules as string[]) : [];
