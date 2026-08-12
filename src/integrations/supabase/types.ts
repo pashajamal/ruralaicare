@@ -487,6 +487,33 @@ export type Database = {
         }
         Relationships: []
       }
+      knowledge_base: {
+        Row: {
+          content: string
+          created_at: string
+          embedding: string
+          id: string
+          metadata: Json
+          source_type: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          embedding: string
+          id?: string
+          metadata?: Json
+          source_type: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          embedding?: string
+          id?: string
+          metadata?: Json
+          source_type?: string
+        }
+        Relationships: []
+      }
       medicine_inventory: {
         Row: {
           created_at: string
@@ -998,6 +1025,22 @@ export type Database = {
         Returns: boolean
       }
       is_doctor: { Args: never; Returns: boolean }
+      match_knowledge_base: {
+        Args: {
+          filter_source_type?: string
+          match_count: number
+          query_embedding: string
+        }
+        Returns: {
+          content: string
+          created_at: string
+          embedding: string
+          id: string
+          metadata: Json
+          similarity: number
+          source_type: string
+        }[]
+      }
       my_centre: { Args: never; Returns: string }
     }
     Enums: {
