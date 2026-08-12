@@ -26,6 +26,7 @@ import { Route as PrescriptionsRouteImport } from './routes/prescriptions'
 import { Route as QueueRouteImport } from './routes/queue'
 import { Route as ReferralsRouteImport } from './routes/referrals'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SymptomSearchRouteImport } from './routes/symptom-search'
 import { Route as TrackerRouteImport } from './routes/tracker'
 import { Route as TrendsRouteImport } from './routes/trends'
 import { Route as PatientsPatientIdRouteImport } from './routes/patients.$patientId'
@@ -117,6 +118,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SymptomSearchRoute = SymptomSearchRouteImport.update({
+  id: '/symptom-search',
+  path: '/symptom-search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TrackerRoute = TrackerRouteImport.update({
   id: '/tracker',
   path: '/tracker',
@@ -161,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/queue': typeof QueueRoute
   '/referrals': typeof ReferralsRoute
   '/settings': typeof SettingsRoute
+  '/symptom-search': typeof SymptomSearchRoute
   '/tracker': typeof TrackerRoute
   '/trends': typeof TrendsRoute
   '/patients/$patientId': typeof PatientsPatientIdRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/queue': typeof QueueRoute
   '/referrals': typeof ReferralsRoute
   '/settings': typeof SettingsRoute
+  '/symptom-search': typeof SymptomSearchRoute
   '/tracker': typeof TrackerRoute
   '/trends': typeof TrendsRoute
   '/patients/$patientId': typeof PatientsPatientIdRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/queue': typeof QueueRoute
   '/referrals': typeof ReferralsRoute
   '/settings': typeof SettingsRoute
+  '/symptom-search': typeof SymptomSearchRoute
   '/tracker': typeof TrackerRoute
   '/trends': typeof TrendsRoute
   '/patients/$patientId': typeof PatientsPatientIdRoute
@@ -236,6 +245,7 @@ export interface FileRouteTypes {
     | '/queue'
     | '/referrals'
     | '/settings'
+    | '/symptom-search'
     | '/tracker'
     | '/trends'
     | '/patients/$patientId'
@@ -260,6 +270,7 @@ export interface FileRouteTypes {
     | '/queue'
     | '/referrals'
     | '/settings'
+    | '/symptom-search'
     | '/tracker'
     | '/trends'
     | '/patients/$patientId'
@@ -284,6 +295,7 @@ export interface FileRouteTypes {
     | '/queue'
     | '/referrals'
     | '/settings'
+    | '/symptom-search'
     | '/tracker'
     | '/trends'
     | '/patients/$patientId'
@@ -309,6 +321,7 @@ export interface RootRouteChildren {
   QueueRoute: typeof QueueRoute
   ReferralsRoute: typeof ReferralsRoute
   SettingsRoute: typeof SettingsRoute
+  SymptomSearchRoute: typeof SymptomSearchRoute
   TrackerRoute: typeof TrackerRoute
   TrendsRoute: typeof TrendsRoute
   PatientsPatientIdRoute: typeof PatientsPatientIdRoute
@@ -437,6 +450,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/symptom-search': {
+      id: '/symptom-search'
+      path: '/symptom-search'
+      fullPath: '/symptom-search'
+      preLoaderRoute: typeof SymptomSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tracker': {
       id: '/tracker'
       path: '/tracker'
@@ -493,6 +513,7 @@ const rootRouteChildren: RootRouteChildren = {
   QueueRoute: QueueRoute,
   ReferralsRoute: ReferralsRoute,
   SettingsRoute: SettingsRoute,
+  SymptomSearchRoute: SymptomSearchRoute,
   TrackerRoute: TrackerRoute,
   TrendsRoute: TrendsRoute,
   PatientsPatientIdRoute: PatientsPatientIdRoute,
