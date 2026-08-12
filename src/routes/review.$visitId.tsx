@@ -393,6 +393,22 @@ function ReviewPage() {
             patientName={patient.name}
             visitCentre={visit.health_centre}
             tier={tier}
+            callVisit={{
+              id: visit.id,
+              patient_id: visit.patient_id,
+              created_at: visit.created_at,
+              symptoms_text: visit.symptoms_text,
+              duration: visit.duration,
+              history_text: visit.history_text,
+              vitals: visit.vitals,
+              risk_tier: visit.risk_tier,
+              triggering_rules: visit.triggering_rules,
+              preliminary_assessment: visit.preliminary_assessment,
+              protocol_text: visit.protocol_text,
+              doctor_notes: visit.doctor_notes,
+              patient_name: patient.name,
+              patient_age: patient.age,
+            }}
           />
         ) : null}
 
