@@ -10,11 +10,29 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as HistoryRouteImport } from './routes/history'
+import { Route as QueueRouteImport } from './routes/queue'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ReviewVisitIdRouteImport } from './routes/review.$visitId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoryRoute = HistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QueueRoute = QueueRouteImport.update({
+  id: '/queue',
+  path: '/queue',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReviewVisitIdRoute = ReviewVisitIdRouteImport.update({
@@ -25,27 +43,40 @@ const ReviewVisitIdRoute = ReviewVisitIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/history': typeof HistoryRoute
+  '/queue': typeof QueueRoute
+  '/settings': typeof SettingsRoute
   '/review/$visitId': typeof ReviewVisitIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/history': typeof HistoryRoute
+  '/queue': typeof QueueRoute
+  '/settings': typeof SettingsRoute
   '/review/$visitId': typeof ReviewVisitIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/history': typeof HistoryRoute
+  '/queue': typeof QueueRoute
+  '/settings': typeof SettingsRoute
   '/review/$visitId': typeof ReviewVisitIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/review/$visitId'
+  fullPaths: '/' | '/history' | '/queue' | '/settings' | '/review/$visitId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/review/$visitId'
-  id: '__root__' | '/' | '/review/$visitId'
+  to: '/' | '/history' | '/queue' | '/settings' | '/review/$visitId'
+  id:
+    '__root__' | '/' | '/history' | '/queue' | '/settings' | '/review/$visitId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  HistoryRoute: typeof HistoryRoute
+  QueueRoute: typeof QueueRoute
+  SettingsRoute: typeof SettingsRoute
   ReviewVisitIdRoute: typeof ReviewVisitIdRoute
 }
 
@@ -56,6 +87,27 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/history': {
+      id: '/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/queue': {
+      id: '/queue'
+      path: '/queue'
+      fullPath: '/queue'
+      preLoaderRoute: typeof QueueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/review/$visitId': {
@@ -70,6 +122,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  HistoryRoute: HistoryRoute,
+  QueueRoute: QueueRoute,
+  SettingsRoute: SettingsRoute,
   ReviewVisitIdRoute: ReviewVisitIdRoute,
 }
 export const routeTree = rootRouteImport
