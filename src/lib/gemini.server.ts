@@ -12,8 +12,8 @@ export const KEY_ERROR = "Gemini API key not configured or invalid";
 /** Google rejects gateway-style "google/" prefixes and some retired aliases. */
 function mapModel(model: string): string {
   const m = model.replace(/^google\//, "");
-  if (m === "gemini-2.5-flash") return "gemini-flash-latest";
-  if (m === "gemini-2.5-pro") return "gemini-pro-latest";
+  if (m === "gemini-2.5-flash" || m === "gemini-2.0-flash" || m === "gemini-flash-latest") return "gemini-3.5-flash";
+  if (m === "gemini-2.5-pro") return "gemini-3.5-flash";
   return m;
 }
 
