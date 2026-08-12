@@ -114,10 +114,10 @@ export async function structureIntake(input: {
 }): Promise<StructuredSummary> {
   const raw = await callGemini(
     JSON.stringify(input),
-    `Extract structured clinical intake data from the health worker's raw text. It may be in English, Hindi (Devanagari), Hinglish (Hindi in Roman script), Bangla, Tamil, Telugu, Marathi, Urdu or Arabic, and languages may be mixed within one note.
+    `Extract structured clinical intake data from the health worker's raw text. It may be in English, Hindi (Devanagari), Hinglish (Hindi in Roman script), Bangla, Tamil, Telugu, Marathi, and languages may be mixed within one note.
 Return ONLY JSON with this exact shape:
 {"symptoms":[string],"duration":string,"age":number,"vitals":{"temp":number|null,"bp":string|null,"pulse":number|null,"spo2":number|null},"history":string,"detected_language":string,"confirmation_message":string}
-The input includes a "language" hint chosen by the health worker; when it is "Auto-detect", detect the language yourself instead. "confirmation_message" must be a short (max 30 words) confirmation that the intake was received, written in the hinted language, or — when the hint is "Auto-detect" — in the SAME language and script the health worker used (reply in Roman-script Hinglish if they wrote Hinglish). "detected_language" is the language name actually detected in the note, e.g. "English", "Hindi", "Hinglish", "Bangla", "Tamil", "Telugu", "Marathi", "Urdu", "Arabic". Do not diagnose.`,
+The input includes a "language" hint chosen by the health worker; when it is "Auto-detect", detect the language yourself instead. "confirmation_message" must be a short (max 30 words) confirmation that the intake was received, written in the hinted language, or — when the hint is "Auto-detect" — in the SAME language and script the health worker used (reply in Roman-script Hinglish if they wrote Hinglish). "detected_language" is the language name actually detected in the note, e.g. "English", "Hindi", "Hinglish", "Bangla", "Tamil", "Telugu", "Marathi". Do not diagnose.`,
     true,
   );
 
