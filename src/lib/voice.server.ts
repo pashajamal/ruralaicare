@@ -31,13 +31,15 @@ export type VoiceIntakeResult = { transcript: string; detected_language: string 
 export async function transcribeIntakeAudio(input: {
   audioBase64: string;
   format: string;
-  field: "symptoms" | "history";
+  field: "symptoms" | "history" | "question";
   languageHint: string;
 }): Promise<VoiceIntakeResult> {
   const fieldLabel =
     input.field === "symptoms"
       ? "the patient's presenting symptoms"
-      : "the patient's basic medical history";
+      : input.field === "history"
+        ? "the patient's basic medical history"
+        : "a spoken health question asked to a clinical assistant";
 
   const res = await fetch(CHAT, {
     method: "POST",
