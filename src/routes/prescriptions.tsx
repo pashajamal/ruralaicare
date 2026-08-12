@@ -299,6 +299,8 @@ function PrescriptionsPage() {
           </Button>
         </section>
 
+        <SymptomDatasetPanel />
+
         <section className="flex flex-col gap-4">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Processed prescriptions</h2>
           {processed.length === 0 ? (
