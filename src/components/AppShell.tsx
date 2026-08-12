@@ -17,6 +17,7 @@ import {
   Menu,
   Pill,
   ScanText,
+  SearchCheck,
   Send,
   Settings,
   ShieldCheck,
@@ -71,6 +72,7 @@ const WORKER_NAV: NavGroup[] = [
     items: [
       { to: "/assistant", key: "assistant", icon: Bot },
       { to: "/clinical-eval", key: "clinicalEval", icon: FlaskConical },
+      { to: "/symptom-search", key: "symptomSearch", icon: SearchCheck },
       { to: "/hospitals", key: "hospitals", icon: MapPin },
       { to: "/medicines", key: "medicines", icon: Pill },
       { to: "/settings", key: "settings", icon: Settings },
@@ -106,6 +108,7 @@ const DOCTOR_NAV: NavGroup[] = [
       { to: "/analytics", key: "analytics", icon: BarChart3 },
       { to: "/prescriptions", key: "prescriptions", icon: ScanText },
       { to: "/clinical-eval", key: "clinicalEval", icon: FlaskConical },
+      { to: "/symptom-search", key: "symptomSearch", icon: SearchCheck },
       { to: "/settings", key: "settings", icon: Settings },
     ],
   },
