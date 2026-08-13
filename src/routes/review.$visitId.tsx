@@ -346,7 +346,7 @@ function ReviewPage() {
   }
 
   const structured = (visit.structured_summary ?? null) as Record<string, unknown> | null;
-  const drug = (visit.drug_safety_info ?? null) as { medicine?: string; warnings?: string[] } | null;
+  const drug = (visit.drug_safety_info ?? null) as { medicine?: string; warnings?: string | string[]; note?: string } | null;
   const isRed = tier === "RED";
   const medSuggestion = (visit.medicine_suggestion ?? null) as {
     status?: string;
@@ -699,9 +699,17 @@ function ReviewPage() {
                   {drug.medicine ? <MedicineBadge medicine={drug.medicine} /> : null}
                 </p>
                 <ul className="mt-2 list-disc space-y-1 pl-5">
-                  {(drug.warnings ?? []).map((w) => (
-                    <li key={w}>{w}</li>
-                  ))}
+                  {Array.isArray(drug.warnings) ? (
+                    drug.warnings.map((w) => (
+                      <li key={w}>{w}</li>
+                    ))
+                  ) : typeof drug.warnings === "string" ? (
+                    drug.warnings.split("\n").filter(Boolean).map((w) => (
+                      <li key={w}>{w}</li>
+                    ))
+                  ) : drug.note ? (
+                    <li>{drug.note}</li>
+                  ) : null}
                 </ul>
                 <p className="mt-2 text-xs text-muted-foreground">Source: openFDA drug label data.</p>
               </div>
