@@ -36,8 +36,10 @@ export const bootstrapAccount = createServerFn({ method: "POST" })
 
     const { data: roles } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", userId);
     if (!roles || roles.length === 0) {
-      await supabaseAdmin.from("user_roles").insert({ user_id: userId, role: data.role });
-      return { role: data.role };
+      // Self-service signup can never grant elevated access: the doctor role is
+      // assigned only by an existing admin, never from a client-supplied value.
+      await supabaseAdmin.from("user_roles").insert({ user_id: userId, role: "health_worker" });
+      return { role: "health_worker" as const, requested_role: data.role };
     }
-    return { role: roles[0]!.role };
+    return { role: roles[0]!.role, requested_role: data.role };
   });

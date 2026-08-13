@@ -177,7 +177,8 @@ function AuthPage() {
                 ))}
               </div>
               <p className="mt-1.5 text-xs text-muted-foreground">
-                Role is applied when the account is first created and is stored server-side.
+                New accounts always start with health worker access. Doctor access is granted by an administrator
+                after verification — it can never be self-assigned at signup.
               </p>
             </fieldset>
 

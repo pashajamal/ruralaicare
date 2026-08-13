@@ -35,6 +35,22 @@ async function actorContext(userId: string) {
   };
 }
 
+/** True when the caller holds an elevated role that may work across health centres. */
+async function isDoctorOrAdmin(userId: string) {
+  const { data } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", userId);
+  return (data ?? []).some((r) => r.role === "doctor" || r.role === "admin");
+}
+
+/**
+ * Guards service-role writes: a caller may only touch records inside their own
+ * health centre (doctors/admins excepted).
+ */
+async function assertCentreAccess(recordCentre: string | null, callerCentre: string, userId: string) {
+  if (!recordCentre || recordCentre === callerCentre) return;
+  if (await isDoctorOrAdmin(userId)) return;
+  throw new Error("This record belongs to another health centre");
+}
+
 export async function saveTrackerEntry(input: EntryInput, userId: string) {
   const { centre, name } = await actorContext(userId);
 
@@ -44,6 +60,17 @@ export async function saveTrackerEntry(input: EntryInput, userId: string) {
     .eq("id", input.patient_id)
     .maybeSingle();
   if (!patient) throw new Error("Patient not found");
+  await assertCentreAccess(patient.health_centre ?? null, centre, userId);
+
+  if (input.care_plan_id) {
+    const { data: plan } = await supabaseAdmin
+      .from("care_plans")
+      .select("id, patient_id, health_centre")
+      .eq("id", input.care_plan_id)
+      .maybeSingle();
+    if (!plan || plan.patient_id !== input.patient_id) throw new Error("Care plan not found for this patient");
+    await assertCentreAccess(plan.health_centre ?? null, centre, userId);
+  }
 
   const { data: history } = await supabaseAdmin
     .from("daily_tracker_entries")
@@ -183,6 +210,24 @@ export async function saveTrackerEntry(input: EntryInput, userId: string) {
 
 export async function saveCarePlan(input: CarePlanInput, userId: string) {
   const { centre, name } = await actorContext(userId);
+
+  const { data: visit } = await supabaseAdmin
+    .from("visits")
+    .select("id, patient_id, health_centre")
+    .eq("id", input.visit_id)
+    .maybeSingle();
+  if (!visit || visit.patient_id !== input.patient_id) throw new Error("Visit not found for this patient");
+  await assertCentreAccess(visit.health_centre ?? null, centre, userId);
+
+  const { data: carePatient } = await supabaseAdmin
+    .from("patients")
+    .select("id, health_centre")
+    .eq("id", input.patient_id)
+    .maybeSingle();
+  if (!carePatient) throw new Error("Patient not found");
+  await assertCentreAccess(carePatient.health_centre ?? null, centre, userId);
+
+  if (!(await isDoctorOrAdmin(userId))) throw new Error("Only a doctor can create a care plan");
 
   const { data: plan, error } = await supabaseAdmin
     .from("care_plans")
