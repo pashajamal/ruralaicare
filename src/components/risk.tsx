@@ -3,9 +3,9 @@ import { AlertTriangle, CheckCircle2, ShieldAlert } from "lucide-react";
 export type Tier = "RED" | "YELLOW" | "GREEN";
 
 export const TIER_LABEL: Record<Tier, string> = {
-  RED: "RISK TIER: RED — Emergency · refer to hospital immediately",
-  YELLOW: "RISK TIER: YELLOW — Doctor review · remote consult recommended",
-  GREEN: "RISK TIER: GREEN — Basic support · first-aid protocol",
+  RED: "RISK TIER: RED — EMERGENCY · REFER TO HOSPITAL IMMEDIATELY",
+  YELLOW: "RISK TIER: YELLOW — DOCTOR REVIEW · REMOTE CONSULT RECOMMENDED",
+  GREEN: "RISK TIER: GREEN — BASIC SUPPORT · FIRST-AID PROTOCOL",
 };
 
 export const TIER_SHORT: Record<Tier, string> = {
@@ -15,7 +15,7 @@ export const TIER_SHORT: Record<Tier, string> = {
 };
 
 export const TIER_BLURB: Record<Tier, string> = {
-  RED: "Deterministic safety rules flagged one or more emergency indicators. Do not delay transport.",
+  RED: "Deterministic safety rules flagged one or more emergency indicators. Do not delay transport. Only stabilization steps are shown while waiting — no medicine is suggested.",
   YELLOW:
     "No emergency indicators, but findings fall outside the safe-at-home range. A doctor should review remotely.",
   GREEN: "Vitals and symptoms are within safe ranges. A fixed first-aid protocol is suggested for the doctor to approve.",
