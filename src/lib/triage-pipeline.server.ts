@@ -10,6 +10,8 @@ import {
   historyAlerts,
   lookupAyurvedic,
   lookupProtocol,
+  lookupStabilization,
+  isRedAdjacent,
   reasonAssessment,
   criticalConditionCheck,
   scoreRisk,
