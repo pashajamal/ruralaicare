@@ -69,7 +69,10 @@ export async function geminiFetch(
   // Gateway (same OpenAI-compatible surface) instead of failing the request.
   if (res.status === 429 && useGoogle && lovableKey) {
     try {
-      const fallback = await send(GATEWAY_BASE, lovableKey, body);
+      const m = body["model"];
+      const gatewayBody =
+        typeof m === "string" && m.startsWith("gemini-") ? { ...body, model: `google/${m}` } : body;
+      const fallback = await send(GATEWAY_BASE, lovableKey, gatewayBody);
       if (fallback.ok) return fallback;
       return fallback.status === 429 ? res : fallback;
     } catch {
