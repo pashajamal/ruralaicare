@@ -32,7 +32,7 @@ export async function answerScopedQuestion(args: {
     supabaseAdmin
       .from("visits")
       .select(
-        "created_at, symptoms_text, duration, history_text, vitals, risk_tier, triggering_rules, preliminary_assessment, protocol_text, status, doctor_decision, doctor_notes, image_analysis",
+        "created_at, symptoms_text, duration, history_text, vitals, risk_tier, triggering_rules, preliminary_assessment, protocol_text, status, doctor_decision, doctor_notes, image_analysis, medicine_suggestion, drug_safety_info",
       )
       .eq("patient_id", args.patientId)
       .order("created_at", { ascending: false })
@@ -57,8 +57,8 @@ export async function answerScopedQuestion(args: {
 
   const system =
     args.audience === "doctor"
-      ? `You are a clinical case assistant for a reviewing doctor. Answer ONLY from the supplied case data (visits, vitals, deterministic risk tiers, tracker history, care plans). Summarize trends and changes over time. Never state a definitive diagnosis, never assign or change a risk tier, never prescribe. If the data does not contain the answer, say so plainly. Max 160 words, plain prose. ${languageRule}`
-      : `You are a case-support assistant for a rural health worker. Answer ONLY from the supplied case data. Explain what vitals and findings mean in simple language, and what to prepare before the doctor call. Never diagnose, never recommend or change medication, never assign a risk tier. If the data does not contain the answer, say so plainly. Max 140 words, plain prose. ${languageRule}`;
+      ? `You are a clinical case assistant for a reviewing doctor. Answer ONLY from the supplied case data (visits, vitals, deterministic risk tiers, tracker history, care plans). Summarize trends and changes over time. You are encouraged to mention and describe any deterministic medicine suggestions (found in "medicine_suggestion") or protocol treatments (found in "protocol_text") explicitly present in the case data. However, never state a definitive diagnosis, never assign or change a risk tier, and never prescribe/recommend new medications/dosages outside of what is explicitly in the case data. If the data does not contain the answer, say so plainly. Max 160 words, plain prose. ${languageRule}`
+      : `You are a case-support assistant for a rural health worker. Answer ONLY from the supplied case data. Explain what vitals and findings mean in simple language, what to prepare before the doctor call, and clearly state/report any deterministic medicine suggestions (found in "medicine_suggestion") or protocol treatments (found in "protocol_text") already recommended in the supplied case data. However, never diagnose, never recommend or change medications/dosages outside of what is explicitly in the case data, and never assign a risk tier. If the data does not contain the answer, say so plainly. Max 140 words, plain prose. ${languageRule}`;
 
   const answer = await callAI(system, `CASE DATA:\n${caseData}\n\nQUESTION: ${args.question}`);
 
