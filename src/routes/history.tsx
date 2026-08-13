@@ -138,6 +138,7 @@ function HistoryPage() {
                 <th className="px-4 py-3 font-semibold">{t(lang, "patient")}</th>
                 <th className="px-4 py-3 font-semibold">{t(lang, "age")}</th>
                 <th className="px-4 py-3 font-semibold">{t(lang, "date")}</th>
+                <th className="px-4 py-3 font-semibold sr-only">Photo</th>
                 <th className="px-4 py-3 font-semibold">{t(lang, "riskTier")}</th>
                 <th className="px-4 py-3 font-semibold">{t(lang, "status")}</th>
                 <th className="px-4 py-3 font-semibold">{t(lang, "decision")}</th>
@@ -147,19 +148,19 @@ function HistoryPage() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center">
+                  <td colSpan={8} className="px-4 py-10 text-center">
                     <Loader2 className="mx-auto size-4 animate-spin" aria-hidden />
                   </td>
                 </tr>
               ) : isError ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-muted-foreground">
                     {t(lang, "historyLoadFail")}
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-muted-foreground">
                     {t(lang, "noPreviousVisits")}
                   </td>
                 </tr>
