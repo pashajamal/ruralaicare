@@ -77,15 +77,25 @@ async function callAI(system: string, user: string): Promise<string> {
     }
   }
 
-  const res = await geminiFetch("/chat/completions", {
-    model: MODEL,
-    messages: [
-      { role: "system", content: system },
-      { role: "user", content: user },
-    ],
-  });
+  // Rate limits (429) are transient — retry a few times with exponential backoff
+  // before surfacing the error to the health worker.
+  const delays = [1000, 3000, 7000];
+  let res: Response | null = null;
+  for (let attempt = 0; ; attempt++) {
+    res = await geminiFetch("/chat/completions", {
+      model: MODEL,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+    });
+    if (res.status !== 429 || attempt >= delays.length) break;
+    await new Promise((r) => setTimeout(r, delays[attempt]));
+  }
 
-  if (res.status === 429) throw new Error("AI rate limit reached. Please retry in a moment.");
+  if (res.status === 429) {
+    throw new Error("The AI service is busy right now. Please wait a few seconds and ask again.");
+  }
   if (res.status === 402) throw new Error("AI credits exhausted.");
   if (!res.ok) throw new Error(`AI request failed (${res.status})`);
 
