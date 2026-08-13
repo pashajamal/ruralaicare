@@ -25,6 +25,7 @@ import { DecisionAudit } from "@/components/DecisionAudit";
 import { MedicineBadge, MedicineMentions } from "@/components/MedicineBadge";
 import { ReferralHospitals } from "@/components/ReferralHospitals";
 import { DocumentViewer } from "@/components/DocumentViewer";
+import { VisitPhotoCard } from "@/components/VisitPhoto";
 import { SpeakButton } from "@/components/SpeakButton";
 import { VitalsCards } from "@/components/VitalsCards";
 import { RiskPill, TIER_BLURB, TIER_LABEL, tierClasses, type Tier } from "@/components/risk";
@@ -582,6 +583,12 @@ function ReviewPage() {
             <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-risk-amber">
               <Sparkles className="size-4" aria-hidden /> AI suggestion — pending doctor review
             </h2>
+
+            <VisitPhotoCard
+              visitId={visit.id}
+              hasImage={Boolean(visit.image_url)}
+              analysis={visit.image_analysis}
+            />
 
             {structured ? (
               <div className="mt-4 rounded-xl bg-card p-4 text-sm">
