@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { HeartPulse, Info } from "lucide-react";
+import { HeartPulse } from "lucide-react";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -100,7 +100,7 @@ export function useConditionsForm(mobile: string) {
 }
 
 export function ChronicConditionsSection({ form }: { form: ConditionsForm }) {
-  const { sex, setSex, entries, update, otherName, setOtherName, pregnancy, setPregnancy, hasRecordOnFile } = form;
+  const { sex, setSex, pregnancy, setPregnancy } = form;
 
   function toggleSymptom(symptom: string, on: boolean) {
     setPregnancy((p) => ({
@@ -113,20 +113,13 @@ export function ChronicConditionsSection({ form }: { form: ConditionsForm }) {
     <>
       <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <h2 className="mb-1 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          <HeartPulse className="size-4" aria-hidden /> Chronic &amp; long-term conditions
+          <HeartPulse className="size-4" aria-hidden /> Patient details
         </h2>
         <p className="mb-4 text-xs text-muted-foreground">
-          Recorded once per patient and reused on every future visit. Update if anything has changed.
+          Recorded once per patient and reused on every future visit.
         </p>
 
-        {hasRecordOnFile ? (
-          <p className="mb-4 flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs text-foreground">
-            <Info className="mt-0.5 size-3.5 text-primary" aria-hidden />
-            Conditions already on file for this mobile number have been pre-filled. Edit below to update the record.
-          </p>
-        ) : null}
-
-        <div className="mb-5 max-w-xs space-y-2">
+        <div className="max-w-xs space-y-2">
           <Label htmlFor="sex">Sex</Label>
           <select
             id="sex"
@@ -141,54 +134,6 @@ export function ChronicConditionsSection({ form }: { form: ConditionsForm }) {
               </option>
             ))}
           </select>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          {[...CHRONIC_CONDITIONS, OTHER_CONDITION].map((condition) => {
-            const entry = entries[condition] ?? emptyEntry();
-            return (
-              <div key={condition} className="rounded-xl border border-border p-3">
-                <label className="flex items-center gap-2 text-sm font-medium">
-                  <Checkbox
-                    checked={entry.checked}
-                    onCheckedChange={(v) => update(condition, { checked: v === true })}
-                  />
-                  {condition}
-                </label>
-                {entry.checked ? (
-                  <div className="mt-3 space-y-2 pl-6">
-                    {condition === OTHER_CONDITION ? (
-                      <div className="space-y-1">
-                        <Label htmlFor="other-condition-name" className="text-xs text-muted-foreground">
-                          Disease / condition name
-                        </Label>
-                        <Input
-                          id="other-condition-name"
-                          value={otherName}
-                          onChange={(e) => setOtherName(e.target.value)}
-                          placeholder="e.g. Epilepsy, Tuberculosis, Anaemia"
-                        />
-                      </div>
-                    ) : null}
-                    <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Checkbox
-                        checked={entry.on_medication}
-                        onCheckedChange={(v) => update(condition, { on_medication: v === true })}
-                      />
-                      Currently on medication for this?
-                    </label>
-                    {entry.on_medication ? (
-                      <Input
-                        value={entry.medication_name}
-                        onChange={(e) => update(condition, { medication_name: e.target.value })}
-                        placeholder="Medication name"
-                      />
-                    ) : null}
-                  </div>
-                ) : null}
-              </div>
-            );
-          })}
         </div>
       </section>
 
