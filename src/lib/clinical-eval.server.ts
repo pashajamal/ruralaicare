@@ -265,12 +265,21 @@ export async function loadEvalDatasets() {
 }
 
 export async function searchSymptomDataset(query: string) {
-  const { data } = await supabaseAdmin
-    .from("staging_symptom_disease")
-    .select("id, symptom_text, disease_label")
-    .or(`symptom_text.ilike.%${query.replace(/[%,]/g, " ")}%,disease_label.ilike.%${query.replace(/[%,]/g, " ")}%`)
-    .limit(12);
-  return data ?? [];
+  // Parameterized filter builders only — never interpolate user input into a raw .or() string.
+  const term = query.slice(0, 120);
+  const [bySymptom, byDisease] = await Promise.all([
+    supabaseAdmin.from("staging_symptom_disease").select("id, symptom_text, disease_label").ilike("symptom_text", `%${term}%`).limit(12),
+    supabaseAdmin.from("staging_symptom_disease").select("id, symptom_text, disease_label").ilike("disease_label", `%${term}%`).limit(12),
+  ]);
+  const seen = new Set<string>();
+  const rows: NonNullable<typeof bySymptom.data> = [];
+  for (const row of [...(bySymptom.data ?? []), ...(byDisease.data ?? [])]) {
+    if (seen.has(row.id)) continue;
+    seen.add(row.id);
+    rows.push(row);
+    if (rows.length >= 12) break;
+  }
+  return rows;
 }
 
 export async function signPrescription(filename: string) {
