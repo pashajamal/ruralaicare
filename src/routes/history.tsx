@@ -6,6 +6,7 @@ import { Loader2, Search } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ConditionBadges } from "@/components/ConditionBadges";
 import { RiskPill } from "@/components/risk";
+import { VisitPhotoIcon } from "@/components/VisitPhoto";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -183,6 +184,9 @@ function HistoryPage() {
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">{patient?.age ?? "—"}</td>
                       <td className="px-4 py-3 text-muted-foreground">{formatDateTime(v.created_at)}</td>
+                      <td className="px-4 py-3">
+                        <VisitPhotoIcon visitId={v.id} hasImage={Boolean(v.image_url)} />
+                      </td>
                       <td className="px-4 py-3">
                         <RiskPill tier={v.risk_tier} />
                       </td>
