@@ -46,25 +46,38 @@ export async function geminiFetch(
       ? { ...body, model: mapModel(body["model"]) }
       : body;
 
-  const maxRetries = 3;
-  let lastRes: Response | null = null;
+  const send = async (b: string, k: string, p: Record<string, unknown>) => {
+    const maxRetries = 3;
+    let lastRes: Response | null = null;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      const res = await fetch(`${b}${path}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${k}` },
+        body: JSON.stringify(p),
+      });
+      if (res.status === 401 || res.status === 403) throw new Error(KEY_ERROR);
+      if (res.status !== 429 || attempt === maxRetries) return res;
+      lastRes = res;
+      await new Promise((r) => setTimeout(r, 1200 * attempt));
+    }
+    return lastRes!;
+  };
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    const res = await fetch(`${base}${path}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-      body: JSON.stringify(payload),
-    });
+  const res = await send(base, key, payload);
 
-    if (res.status === 401 || res.status === 403) throw new Error(KEY_ERROR);
-    if (res.status !== 429 || attempt === maxRetries) return res;
-
-    lastRes = res;
-    // Wait 1.2s before retrying when rate limited
-    await new Promise((r) => setTimeout(r, 1200 * attempt));
+  // Google's per-key quota is easily exhausted; fall back to the Lovable AI
+  // Gateway (same OpenAI-compatible surface) instead of failing the request.
+  if (res.status === 429 && useGoogle && lovableKey) {
+    try {
+      const fallback = await send(GATEWAY_BASE, lovableKey, body);
+      if (fallback.ok) return fallback;
+      return fallback.status === 429 ? res : fallback;
+    } catch {
+      return res;
+    }
   }
 
-  return lastRes!;
+  return res;
 }
 
 export async function geminiChat(input: {
