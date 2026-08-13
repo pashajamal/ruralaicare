@@ -487,18 +487,37 @@ function extractDays(duration: string): number | null {
   return num;
 }
 
-/* ---------------- Step 4: protocol lookup (GREEN only) ---------------- */
+/* ---------------- Step 4: protocol lookup (all tiers, tier-scoped) ---------------- */
 
-export async function lookupProtocol(structured: StructuredSummary, symptomsText: string) {
+/** Rows whose condition_name carries this prefix are emergency stabilization protocols (RED only). */
+export const STABILIZATION_PREFIX = "Emergency stabilization";
+
+export function isStabilizationRow(conditionName: string) {
+  return conditionName.toLowerCase().startsWith(STABILIZATION_PREFIX.toLowerCase());
+}
+
+type ProtocolRow = {
+  condition_name: string;
+  keywords: string[] | null;
+  otc_medicine: string | null;
+  protocol_text: string;
+};
+
+async function bestProtocolMatch(
+  structured: StructuredSummary,
+  symptomsText: string,
+  filter: (row: ProtocolRow) => boolean,
+): Promise<ProtocolRow | null> {
   const { data } = await supabaseAdmin
     .from("first_aid_protocols")
     .select("condition_name, keywords, otc_medicine, protocol_text");
   if (!data) return null;
 
   const text = `${symptomsText} ${structured.symptoms.join(" ")}`.toLowerCase();
-  let best: (typeof data)[number] | null = null;
+  let best: ProtocolRow | null = null;
   let bestScore = 0;
-  for (const row of data) {
+  for (const row of data as ProtocolRow[]) {
+    if (!filter(row)) continue;
     const score = (row.keywords ?? []).filter((k) => text.includes(k.toLowerCase())).length;
     if (score > bestScore) {
       best = row;
@@ -506,6 +525,43 @@ export async function lookupProtocol(structured: StructuredSummary, symptomsText
     }
   }
   return bestScore > 0 ? best : null;
+}
+
+/** YELLOW / GREEN: ordinary condition protocols only — never emergency stabilization rows. */
+export async function lookupProtocol(structured: StructuredSummary, symptomsText: string) {
+  return bestProtocolMatch(structured, symptomsText, (r) => !isStabilizationRow(r.condition_name));
+}
+
+/**
+ * RED only: fixed stabilization steps to perform WHILE WAITING for transport.
+ * Always sourced from first_aid_protocols — never LLM-generated.
+ */
+export async function lookupStabilization(structured: StructuredSummary, symptomsText: string) {
+  const matched = await bestProtocolMatch(structured, symptomsText, (r) => isStabilizationRow(r.condition_name));
+  if (matched) return matched;
+  const { data } = await supabaseAdmin
+    .from("first_aid_protocols")
+    .select("condition_name, keywords, otc_medicine, protocol_text")
+    .ilike("condition_name", `${STABILIZATION_PREFIX}%general%`)
+    .limit(1);
+  return (data?.[0] as ProtocolRow | undefined) ?? null;
+}
+
+/**
+ * True when the case sits close to the RED boundary. YELLOW medicine suggestions are
+ * suppressed in that case — caution over completeness.
+ */
+export function isRedAdjacent(structured: StructuredSummary, symptomsText: string, rules: string[]): boolean {
+  const v = structured.vitals;
+  const text = `${symptomsText} ${structured.symptoms.join(" ")} ${rules.join(" ")}`.toLowerCase();
+  if (typeof v.spo2 === "number" && v.spo2 < 95) return true;
+  if (typeof v.temp === "number" && v.temp >= 39) return true;
+  if (typeof v.pulse === "number" && (v.pulse > 110 || v.pulse < 50)) return true;
+  const bp = typeof v.bp === "string" ? v.bp.match(/^\s*(\d{2,3})\s*\/\s*(\d{2,3})\s*$/) : null;
+  if (bp && (Number(bp[1]) >= 160 || Number(bp[2]) >= 100)) return true;
+  return /chest pain|difficulty breathing|breathless|shortness of breath|unconscious|seizure|severe|bleeding|blood/.test(
+    text,
+  );
 }
 
 /* ---------------- Step 4b: Ayurvedic / home remedy lookup (GREEN only) ---------------- */

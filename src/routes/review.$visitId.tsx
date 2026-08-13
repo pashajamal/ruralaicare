@@ -484,8 +484,8 @@ function ReviewPage() {
               <AlertTriangle className="size-5" aria-hidden /> Urgent medical attention required
             </h2>
             <p className="mt-2 text-sm text-risk-red">
-              Refer to hospital / nearest doctor immediately. First-aid protocols, OTC medicines and drug-safety
-              suggestions are withheld for emergency cases by design.
+              Refer to hospital / nearest doctor immediately. No medicine is suggested for emergency cases — only fixed
+              stabilization steps to follow while waiting for transport (shown in the AI suggestion panel).
             </p>
             <ul className="mt-3 list-disc space-y-1 pl-5 text-sm font-medium text-risk-red">
               {rules.map((r) => (
@@ -658,10 +658,12 @@ function ReviewPage() {
               </div>
             ) : null}
 
-            {!isRed && visit.protocol_text ? (
+            {visit.protocol_text ? (
               <div className="mt-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-risk-amber">
-                  First-aid protocol (from the clinic protocol library, not AI-written)
+                  {isRed
+                    ? "Emergency stabilization steps — while waiting for transport (from the clinic protocol library, not AI-written)"
+                    : "First-aid protocol (from the clinic protocol library, not AI-written)"}
                 </p>
                 <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
                   {visit.protocol_text
@@ -671,7 +673,19 @@ function ReviewPage() {
                       <li key={line}>{line.replace(/^\d+[.)]\s*/, "")}</li>
                     ))}
                 </ol>
-                <MedicineMentions text={visit.protocol_text} />
+                {isRed ? null : <MedicineMentions text={visit.protocol_text} />}
+              </div>
+            ) : !isRed ? (
+              <p className="mt-4 rounded-xl border border-dashed border-border bg-card p-3 text-sm text-muted-foreground">
+                No specific protocol matched — general supportive care only.
+              </p>
+            ) : null}
+
+            {isRed ? (
+              <div className="mt-4 rounded-xl border border-risk-red/40 bg-risk-red-soft p-4">
+                <p className="text-sm font-bold text-risk-red">
+                  No medicine suggested — this case requires immediate hospital care.
+                </p>
               </div>
             ) : null}
 
@@ -698,6 +712,12 @@ function ReviewPage() {
                   Drug safety note — {drug.medicine}
                   {drug.medicine ? <MedicineBadge medicine={drug.medicine} /> : null}
                 </p>
+                {tier === "YELLOW" ? (
+                  <p className="mt-2 rounded-lg border border-risk-amber/30 bg-risk-amber-soft p-2 text-xs font-semibold text-risk-amber">
+                    Symptom relief only — suggested only to relieve symptoms until a doctor reviews this case, not a
+                    treatment for the underlying cause.
+                  </p>
+                ) : null}
                 <ul className="mt-2 list-disc space-y-1 pl-5">
                   {(drug.warnings ?? []).map((w) => (
                     <li key={w}>{w}</li>
@@ -708,14 +728,14 @@ function ReviewPage() {
             ) : null}
 
             {/* Suggested medicines — retrieval-only, gated by the deterministic risk tier */}
-            {tier === "YELLOW" ? (
+            {tier === "YELLOW" && !drug ? (
               <div className="mt-4 rounded-xl border border-risk-amber/30 bg-card p-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-risk-amber">
                   Doctor consultation recommended
                 </p>
                 <p className="mt-1 text-sm">
-                  No medicine is suggested for YELLOW cases — the presentation is uncertain enough that a doctor should
-                  decide.
+                  No medicine suggested for this case — no protocol medicine confidently matched, or the findings sit
+                  close to the emergency threshold, so the doctor decides treatment.
                 </p>
                 {visit.preliminary_assessment ? (
                   <p className="mt-2 text-xs text-muted-foreground">

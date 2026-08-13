@@ -10,6 +10,8 @@ import {
   historyAlerts,
   lookupAyurvedic,
   lookupProtocol,
+  lookupStabilization,
+  isRedAdjacent,
   reasonAssessment,
   criticalConditionCheck,
   scoreRisk,
@@ -240,19 +242,46 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
     console.error("critical-condition check failed", error);
   }
 
-  // 4 + 5. GREEN only: fixed protocol lookup + OpenFDA drug safety. RED hard-stops.
+  // 4 + 5. Tier-scoped protocol lookup + OpenFDA drug safety.
+  //   RED    -> emergency stabilization steps only, never a medicine.
+  //   YELLOW -> conservative supportive protocol + OTC only when it is safe and confirmed by OpenFDA.
+  //   GREEN  -> full protocol + OTC drug-safety note (unchanged behaviour).
   let protocolText: string | null = null;
   let drugSafety: DrugSafety | null = null;
   let ayurvedic: { condition_name: string; remedy_text: string; source_reference: string | null } | null = null;
   const guardrailNotes: string[] = [];
   let medicineSuggestion: MedicineSuggestion | null = null;
-  if (risk.tier === "GREEN") {
+
+  if (risk.tier === "RED") {
+    try {
+      const stabilization = await lookupStabilization(structured, input.symptoms);
+      if (stabilization) {
+        protocolText = `${stabilization.condition_name}\n\n${stabilization.protocol_text}`;
+      }
+    } catch (error) {
+      console.error("stabilization lookup failed", error);
+    }
+  }
+
+  if (risk.tier === "YELLOW" || risk.tier === "GREEN") {
     try {
       const protocol = await lookupProtocol(structured, input.symptoms);
       if (protocol) {
         protocolText = `${protocol.condition_name}\n\n${protocol.protocol_text}`;
-        if (protocol.otc_medicine) {
+        const suppressForCaution =
+          risk.tier === "YELLOW" && isRedAdjacent(structured, input.symptoms, risk.rules);
+        if (protocol.otc_medicine && !suppressForCaution) {
           drugSafety = await fetchDrugSafety(protocol.otc_medicine);
+          // Rule: no OpenFDA label data -> show protocol text only, never a medicine name.
+          const hasLabelData = Boolean(
+            drugSafety?.contraindications ||
+              drugSafety?.warnings ||
+              drugSafety?.pediatric_use ||
+              drugSafety?.geriatric_use,
+          );
+          if (!hasLabelData) drugSafety = null;
+        }
+        if (drugSafety) {
           // Guardrail: cross-check the label text against the patient's flagged conditions.
           const labelText = [
             protocol.otc_medicine,
@@ -265,14 +294,22 @@ export async function runIntakePipeline(input: IntakeInput, userId: string) {
             .join(" ");
           const caution = suggestionGuardrail(labelText, conditionCtx);
           if (caution) {
-            drugSafety = { medicine: protocol.otc_medicine, source: "openFDA", note: caution };
+            drugSafety = null;
             guardrailNotes.push(caution);
           }
+        }
+        if (risk.tier === "YELLOW" && suppressForCaution) {
+          guardrailNotes.push(
+            "Medicine suggestion suppressed — findings sit close to the emergency threshold, so a doctor decides treatment.",
+          );
         }
       }
     } catch (error) {
       console.error("protocol/drug lookup failed", error);
     }
+  }
+
+  if (risk.tier === "GREEN") {
     try {
       ayurvedic = await lookupAyurvedic(structured, input.symptoms);
       if (ayurvedic) {
