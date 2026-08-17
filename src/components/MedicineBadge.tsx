@@ -49,7 +49,7 @@ export function MedicineBadge({ medicine }: { medicine: string }) {
   }
   return (
     <Link
-      to="/hospitals"
+      to="/resources" search={{ tab: "hospitals" }}
       className="ml-2 inline-flex items-center gap-1 rounded-full border border-risk-amber/30 bg-risk-amber-soft px-2 py-0.5 text-[11px] font-semibold text-risk-amber align-middle underline-offset-2 hover:underline"
     >
       <PackageX className="size-3" aria-hidden /> Not Available — Nearest Pharmacy
