@@ -237,14 +237,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <Menu className="size-5" aria-hidden />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-72 p-0">
+              <SheetContent side="left" className="flex h-full w-72 flex-col p-0">
                 <SheetHeader className="px-5 py-4 text-left">
                   <SheetTitle className="flex items-center gap-2 text-sm">
                     <img src={clinicLogo.url} alt="" className="size-6 rounded-md object-contain" />
                     AI Virtual Clinic
                   </SheetTitle>
                 </SheetHeader>
-                <nav aria-label="Mobile" className="flex flex-col gap-1 overflow-y-auto px-3 pb-4">
+                <nav aria-label="Mobile" className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 pb-4">
                   <NavLinks groups={nav} lang={lang} onNavigate={() => setMobileOpen(false)} />
                 </nav>
                 {session ? (
