@@ -14,8 +14,10 @@ import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AssistantRouteImport } from './routes/assistant'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CarePlansRouteImport } from './routes/care-plans'
+import { Route as CasesRouteImport } from './routes/cases'
 import { Route as ClinicalEvalRouteImport } from './routes/clinical-eval'
 import { Route as ConsultationRouteImport } from './routes/consultation'
+import { Route as DiagnosticsRouteImport } from './routes/diagnostics'
 import { Route as DoctorRouteImport } from './routes/doctor'
 import { Route as FollowupsRouteImport } from './routes/followups'
 import { Route as HistoryRouteImport } from './routes/history'
@@ -23,10 +25,12 @@ import { Route as HospitalsRouteImport } from './routes/hospitals'
 import { Route as IntakeRouteImport } from './routes/intake'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MedicinesRouteImport } from './routes/medicines'
+import { Route as MonitoringRouteImport } from './routes/monitoring'
 import { Route as MyCasesRouteImport } from './routes/my-cases'
 import { Route as PrescriptionsRouteImport } from './routes/prescriptions'
 import { Route as QueueRouteImport } from './routes/queue'
 import { Route as ReferralsRouteImport } from './routes/referrals'
+import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SymptomSearchRouteImport } from './routes/symptom-search'
 import { Route as TrackerRouteImport } from './routes/tracker'
@@ -64,6 +68,11 @@ const CarePlansRoute = CarePlansRouteImport.update({
   path: '/care-plans',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CasesRoute = CasesRouteImport.update({
+  id: '/cases',
+  path: '/cases',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClinicalEvalRoute = ClinicalEvalRouteImport.update({
   id: '/clinical-eval',
   path: '/clinical-eval',
@@ -72,6 +81,11 @@ const ClinicalEvalRoute = ClinicalEvalRouteImport.update({
 const ConsultationRoute = ConsultationRouteImport.update({
   id: '/consultation',
   path: '/consultation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiagnosticsRoute = DiagnosticsRouteImport.update({
+  id: '/diagnostics',
+  path: '/diagnostics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DoctorRoute = DoctorRouteImport.update({
@@ -109,6 +123,11 @@ const MedicinesRoute = MedicinesRouteImport.update({
   path: '/medicines',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MonitoringRoute = MonitoringRouteImport.update({
+  id: '/monitoring',
+  path: '/monitoring',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MyCasesRoute = MyCasesRouteImport.update({
   id: '/my-cases',
   path: '/my-cases',
@@ -127,6 +146,11 @@ const QueueRoute = QueueRouteImport.update({
 const ReferralsRoute = ReferralsRouteImport.update({
   id: '/referrals',
   path: '/referrals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesRoute = ResourcesRouteImport.update({
+  id: '/resources',
+  path: '/resources',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -194,8 +218,10 @@ export interface FileRoutesByFullPath {
   '/assistant': typeof AssistantRoute
   '/auth': typeof AuthRoute
   '/care-plans': typeof CarePlansRoute
+  '/cases': typeof CasesRoute
   '/clinical-eval': typeof ClinicalEvalRoute
   '/consultation': typeof ConsultationRoute
+  '/diagnostics': typeof DiagnosticsRoute
   '/doctor': typeof DoctorRoute
   '/followups': typeof FollowupsRoute
   '/history': typeof HistoryRoute
@@ -203,10 +229,12 @@ export interface FileRoutesByFullPath {
   '/intake': typeof IntakeRoute
   '/mcp': typeof McpRoute
   '/medicines': typeof MedicinesRoute
+  '/monitoring': typeof MonitoringRoute
   '/my-cases': typeof MyCasesRoute
   '/prescriptions': typeof PrescriptionsRoute
   '/queue': typeof QueueRoute
   '/referrals': typeof ReferralsRoute
+  '/resources': typeof ResourcesRoute
   '/settings': typeof SettingsRoute
   '/symptom-search': typeof SymptomSearchRoute
   '/tracker': typeof TrackerRoute
@@ -225,8 +253,10 @@ export interface FileRoutesByTo {
   '/assistant': typeof AssistantRoute
   '/auth': typeof AuthRoute
   '/care-plans': typeof CarePlansRoute
+  '/cases': typeof CasesRoute
   '/clinical-eval': typeof ClinicalEvalRoute
   '/consultation': typeof ConsultationRoute
+  '/diagnostics': typeof DiagnosticsRoute
   '/doctor': typeof DoctorRoute
   '/followups': typeof FollowupsRoute
   '/history': typeof HistoryRoute
@@ -234,10 +264,12 @@ export interface FileRoutesByTo {
   '/intake': typeof IntakeRoute
   '/mcp': typeof McpRoute
   '/medicines': typeof MedicinesRoute
+  '/monitoring': typeof MonitoringRoute
   '/my-cases': typeof MyCasesRoute
   '/prescriptions': typeof PrescriptionsRoute
   '/queue': typeof QueueRoute
   '/referrals': typeof ReferralsRoute
+  '/resources': typeof ResourcesRoute
   '/settings': typeof SettingsRoute
   '/symptom-search': typeof SymptomSearchRoute
   '/tracker': typeof TrackerRoute
@@ -257,8 +289,10 @@ export interface FileRoutesById {
   '/assistant': typeof AssistantRoute
   '/auth': typeof AuthRoute
   '/care-plans': typeof CarePlansRoute
+  '/cases': typeof CasesRoute
   '/clinical-eval': typeof ClinicalEvalRoute
   '/consultation': typeof ConsultationRoute
+  '/diagnostics': typeof DiagnosticsRoute
   '/doctor': typeof DoctorRoute
   '/followups': typeof FollowupsRoute
   '/history': typeof HistoryRoute
@@ -266,10 +300,12 @@ export interface FileRoutesById {
   '/intake': typeof IntakeRoute
   '/mcp': typeof McpRoute
   '/medicines': typeof MedicinesRoute
+  '/monitoring': typeof MonitoringRoute
   '/my-cases': typeof MyCasesRoute
   '/prescriptions': typeof PrescriptionsRoute
   '/queue': typeof QueueRoute
   '/referrals': typeof ReferralsRoute
+  '/resources': typeof ResourcesRoute
   '/settings': typeof SettingsRoute
   '/symptom-search': typeof SymptomSearchRoute
   '/tracker': typeof TrackerRoute
@@ -290,8 +326,10 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/auth'
     | '/care-plans'
+    | '/cases'
     | '/clinical-eval'
     | '/consultation'
+    | '/diagnostics'
     | '/doctor'
     | '/followups'
     | '/history'
@@ -299,10 +337,12 @@ export interface FileRouteTypes {
     | '/intake'
     | '/mcp'
     | '/medicines'
+    | '/monitoring'
     | '/my-cases'
     | '/prescriptions'
     | '/queue'
     | '/referrals'
+    | '/resources'
     | '/settings'
     | '/symptom-search'
     | '/tracker'
@@ -321,8 +361,10 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/auth'
     | '/care-plans'
+    | '/cases'
     | '/clinical-eval'
     | '/consultation'
+    | '/diagnostics'
     | '/doctor'
     | '/followups'
     | '/history'
@@ -330,10 +372,12 @@ export interface FileRouteTypes {
     | '/intake'
     | '/mcp'
     | '/medicines'
+    | '/monitoring'
     | '/my-cases'
     | '/prescriptions'
     | '/queue'
     | '/referrals'
+    | '/resources'
     | '/settings'
     | '/symptom-search'
     | '/tracker'
@@ -352,8 +396,10 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/auth'
     | '/care-plans'
+    | '/cases'
     | '/clinical-eval'
     | '/consultation'
+    | '/diagnostics'
     | '/doctor'
     | '/followups'
     | '/history'
@@ -361,10 +407,12 @@ export interface FileRouteTypes {
     | '/intake'
     | '/mcp'
     | '/medicines'
+    | '/monitoring'
     | '/my-cases'
     | '/prescriptions'
     | '/queue'
     | '/referrals'
+    | '/resources'
     | '/settings'
     | '/symptom-search'
     | '/tracker'
@@ -384,8 +432,10 @@ export interface RootRouteChildren {
   AssistantRoute: typeof AssistantRoute
   AuthRoute: typeof AuthRoute
   CarePlansRoute: typeof CarePlansRoute
+  CasesRoute: typeof CasesRoute
   ClinicalEvalRoute: typeof ClinicalEvalRoute
   ConsultationRoute: typeof ConsultationRoute
+  DiagnosticsRoute: typeof DiagnosticsRoute
   DoctorRoute: typeof DoctorRoute
   FollowupsRoute: typeof FollowupsRoute
   HistoryRoute: typeof HistoryRoute
@@ -393,10 +443,12 @@ export interface RootRouteChildren {
   IntakeRoute: typeof IntakeRoute
   McpRoute: typeof McpRoute
   MedicinesRoute: typeof MedicinesRoute
+  MonitoringRoute: typeof MonitoringRoute
   MyCasesRoute: typeof MyCasesRoute
   PrescriptionsRoute: typeof PrescriptionsRoute
   QueueRoute: typeof QueueRoute
   ReferralsRoute: typeof ReferralsRoute
+  ResourcesRoute: typeof ResourcesRoute
   SettingsRoute: typeof SettingsRoute
   SymptomSearchRoute: typeof SymptomSearchRoute
   TrackerRoute: typeof TrackerRoute
@@ -447,6 +499,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CarePlansRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cases': {
+      id: '/cases'
+      path: '/cases'
+      fullPath: '/cases'
+      preLoaderRoute: typeof CasesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/clinical-eval': {
       id: '/clinical-eval'
       path: '/clinical-eval'
@@ -459,6 +518,13 @@ declare module '@tanstack/react-router' {
       path: '/consultation'
       fullPath: '/consultation'
       preLoaderRoute: typeof ConsultationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diagnostics': {
+      id: '/diagnostics'
+      path: '/diagnostics'
+      fullPath: '/diagnostics'
+      preLoaderRoute: typeof DiagnosticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/doctor': {
@@ -510,6 +576,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MedicinesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/monitoring': {
+      id: '/monitoring'
+      path: '/monitoring'
+      fullPath: '/monitoring'
+      preLoaderRoute: typeof MonitoringRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/my-cases': {
       id: '/my-cases'
       path: '/my-cases'
@@ -536,6 +609,13 @@ declare module '@tanstack/react-router' {
       path: '/referrals'
       fullPath: '/referrals'
       preLoaderRoute: typeof ReferralsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources': {
+      id: '/resources'
+      path: '/resources'
+      fullPath: '/resources'
+      preLoaderRoute: typeof ResourcesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -624,8 +704,10 @@ const rootRouteChildren: RootRouteChildren = {
   AssistantRoute: AssistantRoute,
   AuthRoute: AuthRoute,
   CarePlansRoute: CarePlansRoute,
+  CasesRoute: CasesRoute,
   ClinicalEvalRoute: ClinicalEvalRoute,
   ConsultationRoute: ConsultationRoute,
+  DiagnosticsRoute: DiagnosticsRoute,
   DoctorRoute: DoctorRoute,
   FollowupsRoute: FollowupsRoute,
   HistoryRoute: HistoryRoute,
@@ -633,10 +715,12 @@ const rootRouteChildren: RootRouteChildren = {
   IntakeRoute: IntakeRoute,
   McpRoute: McpRoute,
   MedicinesRoute: MedicinesRoute,
+  MonitoringRoute: MonitoringRoute,
   MyCasesRoute: MyCasesRoute,
   PrescriptionsRoute: PrescriptionsRoute,
   QueueRoute: QueueRoute,
   ReferralsRoute: ReferralsRoute,
+  ResourcesRoute: ResourcesRoute,
   SettingsRoute: SettingsRoute,
   SymptomSearchRoute: SymptomSearchRoute,
   TrackerRoute: TrackerRoute,
