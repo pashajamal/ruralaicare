@@ -288,6 +288,20 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             ) : null}
             <TrustBadge />
+            {session ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 md:hidden"
+                aria-label={t(lang, "signOut")}
+                onClick={async () => {
+                  await signOut();
+                  void navigate({ to: "/auth" });
+                }}
+              >
+                <LogOut className="size-5" aria-hidden />
+              </Button>
+            ) : null}
             <label className="sr-only" htmlFor="lang-switch">
               {t(lang, "language")}
             </label>
