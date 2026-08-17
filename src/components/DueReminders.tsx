@@ -94,7 +94,7 @@ export function DueReminders({ limit = 8, compact = false }: { limit?: number; c
                 </span>
                 <div className="ml-auto flex gap-2">
                   <Button asChild size="sm" variant="outline">
-                    <Link to="/tracker">Open tracker</Link>
+                    <Link to="/monitoring" search={{ tab: "tracker" }}>Open tracker</Link>
                   </Button>
                   <Button size="sm" disabled={busy === r.id} onClick={() => markDone(r.id, r.patient_id, label)}>
                     {busy === r.id ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null} Mark done

@@ -1,7 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { AlertTriangle, Loader2, Search } from "lucide-react";
+import { AlertTriangle, ClipboardPlus, Loader2, Search, Video } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
@@ -42,6 +42,7 @@ function QueuePage() {
   const { profile, role } = useAuth();
   const { lang } = useLang();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [tier, setTier] = useState<(typeof TIER_FILTERS)[number]>("All");
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("Pending");
@@ -115,14 +116,31 @@ function QueuePage() {
     void qc.invalidateQueries({ queryKey: ["queue"] });
   }
 
+  /** Launch a live consultation straight from the queue row. */
+  async function launchConsult(
+    row: { id: string; patient_id: string; risk_tier: string | null; consult: unknown },
+  ) {
+    if (!row.consult) {
+      await requestConsult(row, row.risk_tier === "RED" ? "emergency" : "urgent");
+    }
+    void navigate({ to: "/consultation" });
+  }
+
   const redCount = rows.filter((r) => r.risk_tier === "RED").length;
 
   return (
     <AppShell>
       <div className="mx-auto max-w-6xl space-y-5">
-        <header>
-          <h1 className="text-2xl font-semibold tracking-tight">{t(lang, "queue")}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{t(lang, "queueSubtitle")}</p>
+        <header className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">{t(lang, "queue")}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{t(lang, "queueSubtitle")}</p>
+          </div>
+          <Button asChild>
+            <Link to="/intake">
+              <ClipboardPlus className="size-4" aria-hidden /> {t(lang, "newPatient")}
+            </Link>
+          </Button>
         </header>
 
         {redCount > 0 ? (
@@ -227,11 +245,23 @@ function QueuePage() {
                         )}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <Button asChild size="sm" variant="outline">
-                          <Link to="/review/$visitId" params={{ visitId: row.id }}>
-                            {t(lang, "view")}
-                          </Link>
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            disabled={busyId === row.id}
+                            aria-label={t(lang, "startConsult")}
+                            title={t(lang, "startConsult")}
+                            onClick={() => void launchConsult(row)}
+                          >
+                            <Video className="size-4" aria-hidden />
+                          </Button>
+                          <Button asChild size="sm" variant="outline">
+                            <Link to="/review/$visitId" params={{ visitId: row.id }}>
+                              {t(lang, "view")}
+                            </Link>
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   );

@@ -2,9 +2,8 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Activity,
   BarChart3,
+  BookMarked,
   Bot,
-  CalendarClock,
-  ClipboardPlus,
   FileText,
   FlaskConical,
   HeartPulse,
@@ -13,16 +12,12 @@ import {
   LineChart,
   ListChecks,
   LogOut,
-  MapPin,
   Menu,
-  Pill,
   ScanText,
-  SearchCheck,
   Send,
   Settings,
   ShieldCheck,
   Stethoscope,
-  Video,
   WifiOff,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
@@ -49,23 +44,19 @@ const WORKER_NAV: NavGroup[] = [
   {
     items: [
       { to: "/", key: "dashboard", icon: LayoutDashboard },
-      { to: "/intake", key: "intake", icon: ClipboardPlus },
     ],
   },
   {
     label: "grpCases",
     items: [
-      { to: "/my-cases", key: "myCases", icon: FileText },
       { to: "/queue", key: "queue", icon: ListChecks },
-      { to: "/consultation", key: "liveConsult", icon: Video },
-      { to: "/history", key: "history", icon: History },
+      { to: "/cases", key: "caseHistory", icon: History },
     ],
   },
   {
     label: "grpCare",
     items: [
-      { to: "/tracker", key: "tracker", icon: HeartPulse },
-      { to: "/followups", key: "followups", icon: CalendarClock },
+      { to: "/monitoring", key: "monitoring", icon: HeartPulse },
       { to: "/referrals", key: "referrals", icon: Send },
     ],
   },
@@ -73,10 +64,8 @@ const WORKER_NAV: NavGroup[] = [
     label: "grpTools",
     items: [
       { to: "/assistant", key: "assistant", icon: Bot },
-      { to: "/clinical-eval", key: "clinicalEval", icon: FlaskConical },
-      { to: "/symptom-search", key: "symptomSearch", icon: SearchCheck },
-      { to: "/hospitals", key: "hospitals", icon: MapPin },
-      { to: "/medicines", key: "medicines", icon: Pill },
+      { to: "/diagnostics", key: "diagnostics", icon: FlaskConical },
+      { to: "/resources", key: "resources", icon: BookMarked },
       { to: "/settings", key: "settings", icon: Settings },
     ],
   },
@@ -86,19 +75,20 @@ const DOCTOR_NAV: NavGroup[] = [
   {
     items: [
       { to: "/", key: "dashboard", icon: LayoutDashboard },
-      { to: "/doctor", key: "reviewQueue", icon: Stethoscope },
-      { to: "/consultation", key: "liveConsult", icon: Video },
     ],
   },
   {
     label: "grpCases",
-    items: [{ to: "/history", key: "history", icon: History }],
+    items: [
+      { to: "/doctor", key: "reviewQueue", icon: Stethoscope },
+      { to: "/cases", key: "caseHistory", icon: History },
+    ],
   },
   {
     label: "grpCare",
     items: [
       { to: "/care-plans", key: "carePlans", icon: FileText },
-      { to: "/followups", key: "followups", icon: CalendarClock },
+      { to: "/monitoring", key: "monitoring", icon: HeartPulse },
       { to: "/referrals", key: "referrals", icon: Send },
     ],
   },
@@ -106,12 +96,11 @@ const DOCTOR_NAV: NavGroup[] = [
     label: "grpTools",
     items: [
       { to: "/assistant", key: "assistant", icon: Bot },
-      { to: "/medicines", key: "medicines", icon: Pill },
-      { to: "/trends", key: "trends", icon: LineChart },
+      { to: "/diagnostics", key: "diagnostics", icon: FlaskConical },
+      { to: "/resources", key: "resources", icon: BookMarked },
       { to: "/analytics", key: "analytics", icon: BarChart3 },
+      { to: "/trends", key: "trends", icon: LineChart },
       { to: "/prescriptions", key: "prescriptions", icon: ScanText },
-      { to: "/clinical-eval", key: "clinicalEval", icon: FlaskConical },
-      { to: "/symptom-search", key: "symptomSearch", icon: SearchCheck },
       { to: "/settings", key: "settings", icon: Settings },
     ],
   },
