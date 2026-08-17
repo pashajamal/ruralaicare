@@ -92,7 +92,7 @@ function DashboardPage() {
             {!isDoctor ? (
               <Button asChild>
                 <Link to="/intake">
-                  <ClipboardPlus className="size-4" aria-hidden /> {t(lang, "newIntake")}
+                  <ClipboardPlus className="size-4" aria-hidden /> {t(lang, "newPatient")}
                 </Link>
               </Button>
             ) : null}
@@ -104,7 +104,9 @@ function DashboardPage() {
               </Button>
             ) : (
               <Button asChild variant="outline">
-                <Link to="/my-cases">{t(lang, "mySubmitted")}</Link>
+                <Link to="/cases" search={{ tab: "submitted" }}>
+                  {t(lang, "mySubmitted")}
+                </Link>
               </Button>
             )}
           </div>
