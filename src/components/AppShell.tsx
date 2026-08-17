@@ -9,6 +9,7 @@ import {
   HeartPulse,
   History,
   LayoutDashboard,
+  LineChart,
   ListChecks,
   LogOut,
   Menu,
